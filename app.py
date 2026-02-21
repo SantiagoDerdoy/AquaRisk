@@ -25,7 +25,45 @@ st.subheader("Predictive Groundwater Intelligence Platform")
 # LOAD DATA
 # ---------------------------
 
-df = load_dataset("data/demo_dataset.csv")
+st.sidebar.header("Upload Client Dataset")
+
+uploaded_file = st.sidebar.file_uploader(
+    "Upload groundwater dataset (CSV)",
+    type=["csv"]
+)
+
+if uploaded_file is not None:
+    df = pd.read_csv(uploaded_file)
+    st.sidebar.success("Client dataset loaded successfully")
+else:
+    df = load_dataset("data/demo_dataset.csv")
+    st.sidebar.info("Using demo dataset")
+
+# Normalizar nombres de columnas automáticamente
+df.columns = df.columns.str.strip()  # elimina espacios invisibles
+df.columns = df.columns.str.lower()  # todo en minúscula
+
+df = df.rename(columns={
+    "well": "Well_ID",
+    "well_id": "Well_ID",
+    "water_level": "Groundwater_Level_m",
+    "groundwater_level_m": "Groundwater_Level_m",
+    "groundwater_level": "Groundwater_Level_m"
+})
+
+# Volver a estandarizar mayúsculas finales
+if "well_id" in df.columns:
+    df = df.rename(columns={"well_id": "Well_ID"})
+if "groundwater_level_m" in df.columns:
+    df = df.rename(columns={"groundwater_level_m": "Groundwater_Level_m"})
+
+required_columns = ["date", "Well_ID", "Groundwater_Level_m"]
+
+if not all(col in df.columns for col in required_columns):
+    st.error("Dataset must contain: date, Well_ID, Groundwater_Level_m")
+    st.write("Detected columns:", df.columns)
+    st.stop()
+    
 df = validate_dataset(df)
 
 df = df.rename(columns={
