@@ -151,28 +151,12 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-st.markdown("### Individual Well Analysis")
-
-selected_well = st.selectbox(
-    "Select Well",
-    wells
-)
-
-st.metric(
-    label="ACEI™ Score",
-    value=f"{acei_score} / 100"
-)
-
-st.write(f"Category: {acei_category}")
-st.write(f"Advisory: {acei_recommendation}")
 
 # ---------------------------
 # SIDEBAR CONTROLS
 # ---------------------------
 
 st.sidebar.header("Simulation Controls")
-
-selected_well = st.sidebar.selectbox("Select Well", wells)
 
 selected_scenario = st.sidebar.selectbox(
     "Scenario",
@@ -237,22 +221,49 @@ sims, probability, p5, p95 = run_monte_carlo(
 risk = classify_risk(probability)
 
 # ---------------------------
+# CALCULATE INDIVIDUAL ACEI
+# ---------------------------
+
+slope = calculate_rate_of_decline(
+    historical
+)
+
+volatility = p95 - p5
+distance_to_threshold = last_value - threshold
+
+acei_score, acei_category, acei_recommendation = calculate_acei(
+    probability,
+    slope * 12,
+    distance_to_threshold,
+    volatility
+)
+
+# ---------------------------
 # DISPLAY RESULTS
 # ---------------------------
 
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 
 with col1:
+    st.metric(
+        "ACEI™️ Score",
+        f"{acei_score:.2f} / 100"
+    )
+
+with col2:
     st.metric(
         "Exceedance Probability",
         f"{probability:.2%}"
     )
 
-with col2:
+with col3:
     st.metric(
         "Risk Classification",
         risk
     )
+
+st.write(f"Category: {acei_category}")
+st.write(f"Advisory: {acei_recommendation}")
 
 # ---------------------------
 # PLOT
