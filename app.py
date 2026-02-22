@@ -158,6 +158,11 @@ st.markdown(
 
 st.sidebar.header("Simulation Controls")
 
+selected_well = st.sidebar.selectbox(
+    "Select Well",
+    wells
+)
+
 selected_scenario = st.sidebar.selectbox(
     "Scenario",
     ["baseline", "drought", "expansion", "sustainable"]
