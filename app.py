@@ -4,6 +4,7 @@ import numpy as np
 import os
 
 from config import *
+from core.acei_engine import calculate_acei, calculate_portfolio_acei
 from core.data_processing import load_dataset, validate_dataset
 from core.feature_engineering import calculate_rate_of_decline
 from core.scenario_engine import generate_scenario
@@ -72,6 +73,98 @@ df = df.rename(columns={
 })
 
 wells = df["Well_ID"].unique()
+
+st.markdown("## 🛡 AquaRisk Capital Exposure Index (ACEI™)")
+
+portfolio_scores = []
+
+for well in wells:
+    well_df = df[df["Well_ID"] == well]
+    last_value = well_df["Groundwater_Level_m"].iloc[-1]
+    slope = calculate_rate_of_decline(
+        well_df["Groundwater_Level_m"].values
+    )
+
+    rain, pump, et = generate_scenario(
+        FORECAST_HORIZON_MONTHS,
+        scenario_type="baseline"
+    )
+
+    trend_forecast = trend_model(last_value, well, FORECAST_HORIZON_MONTHS)
+    hybrid_forecast = hybrid_model(
+        last_value, well, FORECAST_HORIZON_MONTHS,
+        rain, pump, et, RAIN_COEFF, PUMP_COEFF
+    )
+    smooth_forecast = smoothed_model(last_value, well, FORECAST_HORIZON_MONTHS)
+
+    ensemble_forecast = weighted_ensemble(
+        hybrid_forecast,
+        trend_forecast,
+        smooth_forecast
+    )
+
+    sims, probability, p5, p95 = run_monte_carlo(
+        ensemble_forecast,
+        well
+    )
+
+    volatility = p95 - p5
+    distance_to_threshold = last_value - THRESHOLD_LEVEL
+
+    acei_score, _, _ = calculate_acei(
+        probability,
+        slope * 12,
+        distance_to_threshold,
+        volatility
+    )
+
+    portfolio_scores.append(acei_score)
+
+portfolio_score, portfolio_category, portfolio_rec = calculate_portfolio_acei(portfolio_scores)
+
+color = "green"
+if portfolio_score > 60:
+    color = "orange"
+if portfolio_score > 80:
+    color = "red"
+
+st.markdown(
+    f"""
+    <div style="
+        background-color:#111;
+        padding:30px;
+        border-radius:10px;
+        text-align:center;
+        border:2px solid {color};
+    ">
+        <h1 style="color:{color}; font-size:48px;">
+            {portfolio_score} / 100
+        </h1>
+        <h3 style="color:white;">
+            {portfolio_category}
+        </h3>
+        <p style="color:lightgray;">
+            {portfolio_rec}
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
+st.markdown("### Individual Well Analysis")
+
+selected_well = st.selectbox(
+    "Select Well",
+    wells
+)
+
+st.metric(
+    label="ACEI™ Score",
+    value=f"{acei_score} / 100"
+)
+
+st.write(f"Category: {acei_category}")
+st.write(f"Advisory: {acei_recommendation}")
 
 # ---------------------------
 # SIDEBAR CONTROLS

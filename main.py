@@ -5,6 +5,7 @@ import os
 RESULTS_DIR = "results"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 import pandas as pd
+import numpy as np
 from config import *
 from core.data_processing import load_dataset, validate_dataset
 from core.feature_engineering import calculate_rate_of_decline
@@ -17,6 +18,7 @@ from core.risk_solver import solve_pumping_reduction
 from core.report_generator import generate_report
 from core.plot_generator import generate_forecast_plot
 from core.risk_engine import classify_risk, calculate_time_to_threshold
+from core.acei_engine import calculate_acei, calculate_portfolio_acei
 from datetime import datetime
 
 # Coeficientes hidrogeológicos (demo)
@@ -50,12 +52,12 @@ def run_model():
 
     wells = df["Well_ID"].unique()
 
-    SCENARIOS = [
-        "baseline",
-        "drought",
-        "expansion",
-        "sustainable"
-    ]
+    SCENARIOS = {
+        "baseline": "Baseline Operating Scenario",
+        "drought": "Climatic Stress Scenario",
+        "expansion": "Production Expansion Scenario",
+        "sustainable": "Sustainability Strategy Scenario"
+    }
 
     print("====================================================")
     print("AquaRisk Predictive Groundwater Intelligence Demo")
@@ -84,11 +86,11 @@ def run_model():
 
         scenario_results = []
 
-        for scenario in SCENARIOS:
+        for scenario_key, scenario_name in SCENARIOS.items():
 
             rain, pump, et = generate_scenario(
                 FORECAST_HORIZON_MONTHS,
-                scenario_type=scenario
+                scenario_type=scenario_key
             )
 
             trend_forecast = trend_model(
@@ -124,7 +126,23 @@ def run_model():
                 ensemble_forecast,
                 well
             )
+            
+            probability = float(np.mean(probability))
 
+            volatility = p95 - p5
+            distance_to_threshold = last_value - THRESHOLD_LEVEL
+
+            acei_score, acei_category, acei_recommendation = calculate_acei(
+                probability,
+                slope * 12,  # anualizamos
+                distance_to_threshold,
+                volatility
+            )
+
+            print("\nACEI™ Score:", acei_score, "/ 100")
+            print("Category:", acei_category)
+            print("Advisory:", acei_recommendation)
+ 
             mean_cross, prob_12, prob_24 = calculate_time_to_threshold(
                 sims,
                 THRESHOLD_LEVEL
@@ -144,7 +162,7 @@ def run_model():
             risk = classify_risk(probability)
 
             scenario_results.append(
-                (scenario, probability, risk)
+                (scenario_name, probability, risk)
             )
 
         # Ordenar por riesgo
