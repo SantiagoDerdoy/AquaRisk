@@ -199,40 +199,42 @@ header p {
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    border: none;
     transition: all 0.3s ease;
 }
 
 /* PROFESSIONAL */
-.card:not(.featured) .plan-button {
-    background-color: white;
-    color: #0f172a;
-}
-
-.card:not(.featured) .plan-button:hover {
-    background-color: #e2e8f0;
-}
-
-/* ADVANCED */
-.card.featured .plan-button {
-    background-color: #2563eb;
+.professional-btn {
+    background: transparent;
+    border: 1px solid white;
     color: white;
 }
 
-.card.featured .plan-button:hover {
+.professional-btn:hover {
+    background: white;
+    color: #0f172a;
+}
+
+/* ADVANCED */
+.advanced-btn {
+    background-color: #2563eb;
+    border: none;
+    color: white;
+}
+
+.advanced-btn:hover {
     background-color: #1d4ed8;
 }
 
 /* ENTERPRISE */
-.secondary {
-    background: transparent !important;
-    border: 1px solid white !important;
-    color: white !important;
+.enterprise-btn {
+    background: transparent;
+    border: 1px solid #2563eb;
+    color: #2563eb;
 }
 
-.secondary:hover {
-    background-color: white !important;
-    color: #0f172a !important;
+.enterprise-btn:hover {
+    background: #2563eb;
+    color: white;
 }
 
 /* FOOTER */
@@ -337,7 +339,7 @@ footer {
                 <p>Email support</p>
             </div>
 
-            <button class="plan-button">
+            <button class="plan-button professional-btn">
                 Start Professional
             </button>
         </div>
@@ -358,7 +360,7 @@ footer {
                 <p>Priority support</p>
             </div>
 
-            <button class="plan-button">
+            <button class="plan-button advanced-btn">
                 Start Advanced
             </button>
         </div>
@@ -378,7 +380,7 @@ footer {
                 <p>Dedicated support</p>
             </div>
 
-            <button class="plan-button secondary">
+            <button class="plan-button enterprise-btn">
                 Request Enterprise Access
             </button>
         </div>
