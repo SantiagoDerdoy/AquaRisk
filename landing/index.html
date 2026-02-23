@@ -80,9 +80,10 @@ header p {
 /* SECTIONS */
 
 .section {
-    padding: 80px 20px;
+    padding: 100px 20px;
     text-align: center;
     background-color: #111827;
+    border-top: 1px solid rgba(255,255,255,0.04);
 }
 
 .section h2 {
@@ -90,6 +91,20 @@ header p {
     font-weight: 600;
     margin-bottom: 20px;
 }
+
+/* BADGE */
+.badge {
+    display: inline-block;
+    background-color: #2563eb;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 20px;
+    margin-bottom: 15px;
+    letter-spacing: 0.5px;
+}
+
 
 /* CARDS */
 
@@ -109,10 +124,13 @@ header p {
     text-align: left;
     box-shadow: 0 8px 30px rgba(0,0,0,0.4);
     transition: all 0.25s ease;
+    border: 1px solid rgba(255,255,255,0.03);
 }
 
 .card:hover {
-    transform: translateY(-6px);
+    transform: translateY(-8px);
+    box-shadow: 0 18px 50px rgba(0,0,0,0.65);
+    border: 1px solid rgba(37,99,235,0.3);
 }
 
 .card h3 {
@@ -126,6 +144,12 @@ header p {
     color: #94a3b8;
     font-size: 14px;
     margin: 8px 0;
+}
+
+.card strong {
+    font-size: 30px;
+    font-weight: 700;
+    color: #f1f5f9;
 }
 
 /* FOOTER */
@@ -219,7 +243,7 @@ footer {
         <!-- PROFESSIONAL -->
         <div class="card">
             <h3>Professional</h3>
-            <p style="font-size:24px; font-weight:bold;">$299 / month</p>
+            <p><strong>$299</strong> / month</p>
             <p>Up to 10 groundwater assets</p>
             <p>Historical trend analysis</p>
             <p>Linear forecasting model</p>
@@ -229,8 +253,9 @@ footer {
 
         <!-- ADVANCED -->
         <div class="card">
+            <span class="badge">MOST POPULAR</span>
             <h3>Advanced</h3>
-            <p style="font-size:24px; font-weight:bold;">$790 / month</p>
+            <p><strong>$790</strong> / month</p>
             <p>Up to 50 groundwater assets</p>
             <p>Multivariable predictive modeling</p>
             <p>Monte Carlo risk simulations</p>
@@ -243,7 +268,7 @@ footer {
         <!-- ENTERPRISE -->
         <div class="card">
             <h3>Enterprise</h3>
-            <p style="font-size:24px; font-weight:bold;">Custom Pricing</p>
+            <p><strong>Custom</strong> pricing</p>
             <p>Unlimited assets</p>
             <p>Portfolio-level groundwater risk analytics</p>
             <p>Custom modeling & integrations</p>
