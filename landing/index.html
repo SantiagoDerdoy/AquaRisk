@@ -120,15 +120,18 @@ header p {
 }
 
 .card {
-    position: relative;
-    background: #0f172a;
-    padding: 40px 35px;
-    border-radius: 14px;
-    width: 300px;
-    text-align: left;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    background-color: #0f172a;
+    padding: 40px 30px;
+    border-radius: 12px;
+    width: 320px;
+    border: 1px solid rgba(255,255,255,0.05);
     transition: all 0.3s ease;
-    border: 1px solid rgba(255,255,255,0.04);
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    min-height: 540px;
 }
 
 .card:hover {
@@ -148,25 +151,27 @@ header p {
     margin-top: 0;
     font-size: 20px;
     font-weight: 600;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
 }
 
-.card p {
+.features {
+    flex-grow: 1;
+}
+
+.features p {
     color: #94a3b8;
     font-size: 14px;
     margin: 8px 0;
 }
 
-.card strong {
-    font-size: 30px;
-    font-weight: 700;
-    color: #f1f5f9;
-}
 
 /* PRICES */
 
 .price {
-    margin: 15px 0 25px 0;
+    font-size: 34px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 20px;
 }
 
 .amount {
@@ -189,7 +194,7 @@ header p {
 /* PLAN BUTTON */
 
 .plan-button {
-    margin-top: 25px;
+    margin-top: 30px;
     padding: 12px 20px;
     width: 100%;
     font-size: 14px;
@@ -310,32 +315,37 @@ footer {
         <!-- PROFESSIONAL -->
         <div class="card">
             <h3>Professional</h3>
-            <p class="price"><span class="amount">$299</span><span class="period"> / month</span></p>
-            <p>Up to 10 groundwater assets</p>
-            <p>Historical trend analysis</p>
-            <p>Linear forecasting model</p>
-            <p>Critical threshold alerts</p>
-            <p>Automated risk summary report</p>
 
-            <button class="plan-button secondary">
+            <div class="price">$299 / month</div>
+
+            <div class="features">
+                <p>Up to 5 assets</p>
+                <p>Groundwater level analysis</p>
+                <p>Recharge estimation</p>
+                <p>Automated PDF report</p>
+                <p>Email support</p>
+            </div>
+
+            <button class="plan-button">
                 Start Professional
             </button>
         </div>
 
         <!-- ADVANCED -->
         <div class="card featured">
-            <span class="badge">MOST POPULAR</span>
             <h3>Advanced</h3>
-            <p class="price"><span class="amount">$790</span><span class="period"> / month</span></p>
-            <p>Up to 50 groundwater assets</p>
-            <p>Multivariable predictive modeling</p>
-            <p>Monte Carlo risk simulations</p>
-            <p>Water Value at Risk (W-VaR)</p>
-            <p>Capital Exposure Index (CEI)</p>
-            <p>Scenario & stress testing engine</p>
-            <p>Executive financial risk report (PDF)</p>
 
-            <button class="plan-button primary">
+            <div class="price">$790 / month</div>
+
+            <div class="features">
+                <p>Up to 20 assets</p>
+                <p>Advanced trend detection</p>
+                <p>Financial risk metrics</p>
+                <p>Scenario simulation</p>
+                <p>Priority support</p>
+            </div>
+
+            <button class="plan-button">
                 Start Advanced
             </button>
         </div>
@@ -344,16 +354,16 @@ footer {
         <div class="card">
             <h3>Enterprise</h3>
 
-            <p class="price custom-price">
-                Custom pricing
-            </p>
+            <div class="price">Custom pricing</div>
 
-            <p>Unlimited assets</p>
-            <p>Portfolio-level groundwater risk analytics</p>
-            <p>Custom modeling & integrations</p>
-            <p>Strategic risk advisory sessions</p>
-            <p>Institutional-grade reporting</p>
-            <p>Dedicated support</p>
+            <div class="features">
+                <p>Unlimited assets</p>
+                <p>Portfolio-level groundwater risk analytics</p>
+                <p>Custom modeling & integrations</p>
+                <p>Strategic advisory sessions</p>
+                <p>Institutional reporting</p>
+                <p>Dedicated support</p>
+            </div>
 
             <button class="plan-button secondary">
                 Request Enterprise Access
