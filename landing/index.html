@@ -101,10 +101,10 @@ header p {
     transform: translateX(-50%);
     background-color: #2563eb;
     color: white;
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 12px;
     padding: 6px 14px;
     border-radius: 20px;
+    font-weight: 600;
     letter-spacing: 0.5px;
 }
 
@@ -196,32 +196,43 @@ header p {
 .plan-button {
     margin-top: 30px;
     padding: 12px 20px;
-    width: 100%;
-    font-size: 14px;
-    font-weight: 600;
     border-radius: 8px;
+    font-weight: 600;
     cursor: pointer;
     border: none;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-.plan-button.primary {
+/* PROFESSIONAL */
+.card:not(.featured) .plan-button {
+    background-color: white;
+    color: #0f172a;
+}
+
+.card:not(.featured) .plan-button:hover {
+    background-color: #e2e8f0;
+}
+
+/* ADVANCED */
+.card.featured .plan-button {
     background-color: #2563eb;
     color: white;
 }
 
-.plan-button.primary:hover {
+.card.featured .plan-button:hover {
     background-color: #1d4ed8;
 }
 
-.plan-button.secondary {
-    background-color: transparent;
-    color: #f1f5f9;
-    border: 1px solid rgba(255,255,255,0.2);
+/* ENTERPRISE */
+.secondary {
+    background: transparent !important;
+    border: 1px solid white !important;
+    color: white !important;
 }
 
-.plan-button.secondary:hover {
-    background-color: rgba(255,255,255,0.05);
+.secondary:hover {
+    background-color: white !important;
+    color: #0f172a !important;
 }
 
 /* FOOTER */
@@ -333,6 +344,8 @@ footer {
 
         <!-- ADVANCED -->
         <div class="card featured">
+            <div class="badge">Most Popular</div>
+
             <h3>Advanced</h3>
 
             <div class="price">$790 / month</div>
