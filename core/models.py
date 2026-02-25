@@ -1,53 +1,87 @@
 # core/models.py
 
 import numpy as np
-from config import DECLINE_RATES
 
-def trend_model(last_value, well, months):
 
-    slope_monthly = DECLINE_RATES[well] / 12
+def trend_model(last_value, slope, months):
+    """
+    Linear trend model.
+    slope is expressed in meters per month.
+    """
+
     forecast = []
-
-    level = last_value
+    level = float(last_value)
 
     for _ in range(months):
-        level = level + slope_monthly
+        level = level + slope
         forecast.append(level)
 
-    return np.array(forecast)
+    forecast = np.array(forecast)
 
-def hybrid_model(last_value, well, months,
-                 rain_projection,
-                 pump_projection,
-                 et_projection,
-                 rain_coeff,
-                 pump_coeff,
-                 et_coeff=0.002):
+    if not np.all(np.isfinite(forecast)):
+        raise ValueError("Trend model diverged. Check slope value.")
 
-    slope_monthly = DECLINE_RATES[well] / 12
+    return forecast
+
+
+def hybrid_model(
+    last_value,
+    slope,
+    months,
+    rain,
+    pump,
+    et,
+    rain_coeff,
+    pump_coeff,
+    et_coeff=0.0
+):
+    """
+    Hybrid physical-statistical model.
+
+    All climate drivers must be scaled consistently.
+    Pumping MUST be expressed in million m3/month.
+    """
+
+    rain = np.array(rain, dtype=float)
+    pump = np.array(pump, dtype=float)
+    et = np.array(et, dtype=float)
+
     forecast = []
-    level = last_value
+    current = float(last_value)
 
-    for m in range(months):
+    for i in range(months):
+        climate_effect = (
+            rain_coeff * rain[i]
+            - pump_coeff * pump[i]
+            - et_coeff * et[i]
+        )
 
-        recharge = rain_coeff[well] * rain_projection[m]
-        drawdown = pump_coeff[well] * (pump_projection[m] / 1e6)
-        et_loss = et_coeff * et_projection[m]
+        current = current + slope + climate_effect
+        forecast.append(current)
 
-        level = level + slope_monthly - recharge + drawdown + et_loss
-        forecast.append(level)
+    forecast = np.array(forecast)
 
-    return np.array(forecast)
+    if not np.all(np.isfinite(forecast)):
+        raise ValueError("Hybrid model diverged. Check coefficient scaling.")
 
-def smoothed_model(last_value, well, months):
+    return forecast
 
-    slope_monthly = (DECLINE_RATES[well] * 0.7) / 12
+
+def smoothed_model(last_value, slope, months, smoothing_factor=0.8):
+    """
+    Smoothed trend model.
+    """
 
     forecast = []
-    level = last_value
+    level = float(last_value)
 
     for _ in range(months):
-        level = level + slope_monthly
+        level = level + slope * smoothing_factor
         forecast.append(level)
 
-    return np.array(forecast)
+    forecast = np.array(forecast)
+
+    if not np.all(np.isfinite(forecast)):
+        raise ValueError("Smoothed model diverged.")
+
+    return forecast

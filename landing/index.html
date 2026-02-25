@@ -2,393 +2,979 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AquaRisk | Predictive Groundwater Intelligence</title>
+    <title>AquaRisk | Groundwater Risk Intelligence</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-<style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+<style>
+:root {
+    --ink:     #060d1a;
+    --deep:    #0a1628;
+    --panel:   #0e1e35;
+    --border:  rgba(255,255,255,0.07);
+    --muted:   #64748b;
+    --soft:    #94a3b8;
+    --body:    #cbd5e1;
+    --bright:  #e2e8f0;
+    --white:   #f8fafc;
+    --blue:    #2563eb;
+    --blue-lt: #3b82f6;
+    --teal:    #0d9488;
+    --gold:    #d4a853;
+    --red:     #ef4444;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
 
 body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
-    background-color: #0b1220;
-    color: #f1f5f9;
-    line-height: 1.6;
+    font-family: 'DM Sans', sans-serif;
+    background-color: var(--ink);
+    color: var(--body);
+    line-height: 1.65;
+    overflow-x: hidden;
 }
 
-/* HEADER */
-
-header {
-    padding: 60px 20px 20px 20px;
-    text-align: center;
+/* ─── NOISE OVERLAY ──────────────────────────────────────── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.025;
+    pointer-events: none;
+    z-index: 0;
 }
 
-h1 {
-    font-size: 48px;
-    font-weight: 700;
-    margin-bottom: 10px;
-    letter-spacing: -1px;
+/* ─── NAV ─────────────────────────────────────────────────── */
+nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 60px;
+    background: rgba(6,13,26,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
 }
 
-header p {
-    color: #94a3b8;
-    font-size: 16px;
+.nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.35rem;
+    color: var(--white);
+    letter-spacing: 0.02em;
 }
 
-/* HERO */
+.nav-logo span {
+    color: var(--blue-lt);
+}
 
+.nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+}
+
+.nav-links a {
+    color: var(--soft);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--white); }
+
+.nav-cta {
+    background: var(--blue);
+    color: white !important;
+    padding: 9px 22px;
+    border-radius: 6px;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    text-transform: none !important;
+    transition: background 0.2s, box-shadow 0.2s !important;
+}
+
+.nav-cta:hover {
+    background: var(--blue-lt) !important;
+    box-shadow: 0 0 20px rgba(37,99,235,0.4) !important;
+}
+
+/* ─── HERO ────────────────────────────────────────────────── */
 .hero {
-    padding: 100px 20px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 140px 60px 100px;
+    overflow: hidden;
+}
+
+/* Radial glow behind hero */
+.hero::after {
+    content: '';
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 600px;
+    background: radial-gradient(ellipse at center,
+        rgba(37,99,235,0.12) 0%,
+        transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-inner {
+    max-width: 860px;
     text-align: center;
-    max-width: 900px;
-    margin: auto;
-    background: radial-gradient(circle at top, rgba(37,99,235,0.15), transparent 60%);
+    position: relative;
+    z-index: 1;
 }
 
-.hero h2 {
-    font-size: 34px;
+.hero-eyebrow {
+    display: inline-block;
+    font-size: 0.72rem;
     font-weight: 600;
-    margin-bottom: 20px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--blue-lt);
+    border: 1px solid rgba(59,130,246,0.35);
+    padding: 6px 16px;
+    border-radius: 100px;
+    margin-bottom: 28px;
 }
 
-.hero p {
-    color: #94a3b8;
-    font-size: 18px;
+.hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.6rem, 5.5vw, 4.2rem);
+    line-height: 1.1;
+    color: var(--white);
+    margin-bottom: 24px;
+    letter-spacing: -0.02em;
 }
 
-/* BUTTON */
+.hero h1 em {
+    font-style: italic;
+    color: var(--blue-lt);
+}
 
-.cta-button {
-    margin-top: 40px;
-    padding: 15px 40px;
-    font-size: 16px;
-    font-weight: 600;
-    background-color: #2563eb;
-    border: none;
-    border-radius: 8px;
+.hero-sub {
+    font-size: 1.125rem;
+    color: var(--soft);
+    max-width: 640px;
+    margin: 0 auto 44px;
+    font-weight: 300;
+    line-height: 1.7;
+}
+
+.hero-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary {
+    display: inline-block;
+    background: var(--blue);
     color: white;
+    padding: 14px 36px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: all 0.25s;
+    border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    letter-spacing: 0.01em;
 }
 
-.cta-button:hover {
-    background-color: #1d4ed8;
+.btn-primary:hover {
+    background: var(--blue-lt);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 32px rgba(37,99,235,0.4);
+}
+
+.btn-ghost {
+    display: inline-block;
+    background: transparent;
+    color: var(--bright);
+    padding: 14px 36px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.95rem;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    transition: all 0.25s;
+    cursor: pointer;
+}
+
+.btn-ghost:hover {
+    border-color: rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.04);
     transform: translateY(-2px);
 }
 
-/* SECTIONS */
-
-.section {
-    padding: 100px 20px;
-    text-align: center;
-    background-color: #111827;
-    border-top: 1px solid rgba(255,255,255,0.04);
-}
-
-.section h2 {
-    font-size: 32px;
-    font-weight: 600;
-    margin-bottom: 20px;
-}
-
-/* BADGE */
-
-.badge {
-    position: absolute;
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #2563eb;
-    color: white;
-    font-size: 12px;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-}
-
-
-/* CARDS */
-
-.pricing {
+/* Data strip under hero */
+.hero-strip {
     display: flex;
     justify-content: center;
-    gap: 30px;
+    gap: 60px;
+    margin-top: 72px;
+    padding-top: 48px;
+    border-top: 1px solid var(--border);
     flex-wrap: wrap;
-    margin-top: 40px;
 }
 
-.card {
-    background-color: #0f172a;
-    padding: 40px 30px;
-    border-radius: 12px;
-    width: 320px;
-    border: 1px solid rgba(255,255,255,0.05);
-    transition: all 0.3s ease;
+.strip-item {
+    text-align: center;
+}
+
+.strip-number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.2rem;
+    color: var(--white);
+    display: block;
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.strip-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+}
+
+/* ─── SECTION BASE ────────────────────────────────────────── */
+section {
+    padding: 110px 60px;
     position: relative;
-
-    display: flex;
-    flex-direction: column;
-
-    min-height: 540px;
+    z-index: 1;
 }
 
-.card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+.section-inner {
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
-/* ADVANCED DESTACADO */
-.card.featured {
-    background: linear-gradient(180deg, #0f172a, #111c33);
-    border: 1px solid rgba(37,99,235,0.5);
-    box-shadow: 0 15px 50px rgba(37,99,235,0.15);
-    transform: scale(1.04);
-}
-
-.card h3 {
-    margin-top: 0;
-    font-size: 20px;
+.section-label {
+    font-size: 0.72rem;
     font-weight: 600;
-    margin-bottom: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--teal);
+    margin-bottom: 14px;
+    display: block;
 }
 
-.features {
-    flex-grow: 1;
-}
-
-.features p {
-    color: #94a3b8;
-    font-size: 14px;
-    margin: 8px 0;
-}
-
-
-/* PRICES */
-
-.price {
-    font-size: 34px;
-    font-weight: 700;
-    color: #ffffff;
+.section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
+    color: var(--white);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
     margin-bottom: 20px;
 }
 
-.amount {
-    font-size: 32px;
-    font-weight: 700;
-    color: #f1f5f9;
+.section-body {
+    font-size: 1.05rem;
+    color: var(--soft);
+    max-width: 660px;
+    font-weight: 300;
+    line-height: 1.75;
 }
 
-.period {
-    font-size: 14px;
-    color: #94a3b8;
+/* ─── WHY ─────────────────────────────────────────────────── */
+.why-section {
+    background: var(--deep);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
 }
 
-.custom-price {
-    font-size: 34px;
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 56px;
+    background: var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.metric-card {
+    background: var(--panel);
+    padding: 44px 36px;
+    transition: background 0.3s;
+}
+
+.metric-card:hover {
+    background: #121f38;
+}
+
+.metric-icon {
+    width: 42px;
+    height: 42px;
+    background: rgba(37,99,235,0.12);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.metric-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--blue-lt);
+    fill: none;
+    stroke-width: 1.5;
+}
+
+.metric-card h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.2rem;
+    color: var(--white);
+    margin-bottom: 10px;
+    font-weight: 400;
+}
+
+.metric-card p {
+    font-size: 0.9rem;
+    color: var(--soft);
+    line-height: 1.65;
+}
+
+.metric-card .tag {
+    display: inline-block;
+    margin-top: 18px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 4px 10px;
+    border-radius: 4px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* ─── CAPABILITIES ────────────────────────────────────────── */
+.capabilities-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    margin-top: 60px;
+}
+
+.cap-item {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.cap-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    color: rgba(37,99,235,0.3);
+    line-height: 1;
+    min-width: 36px;
+    padding-top: 3px;
+}
+
+.cap-text h4 {
+    color: var(--bright);
+    font-size: 1rem;
     font-weight: 600;
-    color: #ffffff;
+    margin-bottom: 6px;
 }
 
-/* PLAN BUTTON */
+.cap-text p {
+    font-size: 0.88rem;
+    color: var(--soft);
+    line-height: 1.65;
+}
 
-.plan-button {
-    margin-top: 30px;
-    padding: 12px 20px;
+/* ─── PRICING ─────────────────────────────────────────────── */
+.pricing-section {
+    background: var(--deep);
+    border-top: 1px solid var(--border);
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 60px;
+}
+
+.price-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 40px 32px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.price-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+}
+
+.price-card.featured {
+    background: linear-gradient(160deg, #0e1e35, #0f2040);
+    border-color: rgba(37,99,235,0.4);
+    box-shadow: 0 0 0 1px rgba(37,99,235,0.15), 0 20px 40px rgba(0,0,0,0.5);
+    transform: scale(1.03);
+}
+
+.price-card.featured:hover {
+    transform: scale(1.03) translateY(-6px);
+}
+
+.plan-badge {
+    position: absolute;
+    top: -13px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--blue);
+    color: white;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    white-space: nowrap;
+}
+
+.plan-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+}
+
+.plan-price {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.6rem;
+    color: var(--white);
+    line-height: 1;
+    margin-bottom: 6px;
+}
+
+.plan-price .period {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--muted);
+    font-weight: 400;
+}
+
+.plan-price .custom {
+    font-size: 1.6rem;
+}
+
+.plan-desc {
+    font-size: 0.85rem;
+    color: var(--soft);
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.6;
+}
+
+.plan-features {
+    list-style: none;
+    flex-grow: 1;
+    margin-bottom: 32px;
+}
+
+.plan-features li {
+    font-size: 0.875rem;
+    color: var(--soft);
+    padding: 8px 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+}
+
+.plan-features li::before {
+    content: '';
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    background: rgba(13,148,136,0.15);
+    border-radius: 50%;
+    display: inline-block;
+    margin-top: 1px;
+    position: relative;
+}
+
+.plan-features li::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8l3.5 3.5L13 4' stroke='%230d9488' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.plan-btn {
+    display: block;
+    text-align: center;
+    padding: 13px 20px;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 0.9rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    border: 1px solid white;
-}
-
-/* PROFESSIONAL */
-.professional-btn {
+    text-decoration: none;
+    transition: all 0.25s;
+    border: 1px solid var(--border);
+    color: var(--bright);
     background: transparent;
+}
+
+.plan-btn:hover {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.2);
+}
+
+.plan-btn.primary {
+    background: var(--blue);
+    border-color: var(--blue);
     color: white;
 }
 
-.professional-btn:hover {
-    background: white;
-    color: #0f172a;
+.plan-btn.primary:hover {
+    background: var(--blue-lt);
+    border-color: var(--blue-lt);
+    box-shadow: 0 8px 24px rgba(37,99,235,0.35);
 }
 
-/* ADVANCED */
-.advanced-btn {
-    background-color: #2563eb;
-    border: none;
-    color: white;
+/* ─── PROCESS ─────────────────────────────────────────────── */
+.process-list {
+    margin-top: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
-.advanced-btn:hover {
-    background-color: #1d4ed8;
+.process-item {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 32px;
+    padding: 36px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: start;
 }
 
-/* ENTERPRISE */
-.enterprise-btn {
-    background: transparent;
-    color: white;
+.process-item:first-child { border-top: 1px solid var(--border); }
+
+.process-step {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    color: rgba(255,255,255,0.08);
+    line-height: 1;
+    padding-top: 4px;
 }
 
-.enterprise-btn:hover {
-    background: white;
-    color: #0f172a;
+.process-content h4 {
+    color: var(--bright);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
 }
 
-/* FOOTER */
+.process-content p {
+    font-size: 0.875rem;
+    color: var(--soft);
+    line-height: 1.65;
+    max-width: 520px;
+}
 
-footer {
-    padding: 40px;
+/* ─── CTA BAND ────────────────────────────────────────────── */
+.cta-band {
+    background: linear-gradient(135deg, #0f2040 0%, #091828 100%);
+    border-top: 1px solid rgba(37,99,235,0.2);
+    border-bottom: 1px solid rgba(37,99,235,0.2);
     text-align: center;
-    background-color: #0b1220;
-    color: #64748b;
-    font-size: 14px;
+    padding: 100px 60px;
 }
 
+.cta-band .section-title {
+    margin: 0 auto 20px;
+    max-width: 640px;
+}
+
+.cta-band .section-body {
+    margin: 0 auto 44px;
+    text-align: center;
+}
+
+/* ─── FOOTER ──────────────────────────────────────────────── */
+footer {
+    background: var(--ink);
+    border-top: 1px solid var(--border);
+    padding: 48px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.footer-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--soft);
+}
+
+.footer-text {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.footer-contact {
+    font-size: 0.85rem;
+    color: var(--soft);
+}
+
+.footer-contact a {
+    color: var(--blue-lt);
+    text-decoration: none;
+}
+
+/* ─── ANIMATIONS ──────────────────────────────────────────── */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.hero-inner > * {
+    animation: fadeUp 0.8s ease both;
+}
+
+.hero-inner > *:nth-child(1) { animation-delay: 0.1s; }
+.hero-inner > *:nth-child(2) { animation-delay: 0.2s; }
+.hero-inner > *:nth-child(3) { animation-delay: 0.3s; }
+.hero-inner > *:nth-child(4) { animation-delay: 0.4s; }
+.hero-inner > *:nth-child(5) { animation-delay: 0.5s; }
+
+/* ─── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 900px) {
+    nav { padding: 18px 24px; }
+    .nav-links { display: none; }
+    section { padding: 80px 24px; }
+    .hero { padding: 120px 24px 80px; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .price-card.featured { transform: none; }
+    .capabilities-grid { grid-template-columns: 1fr; }
+    footer { padding: 36px 24px; flex-direction: column; text-align: center; }
+    .hero-strip { gap: 32px; }
+    .cta-band { padding: 72px 24px; }
+}
 </style>
 </head>
-
 <body>
 
-<header>
-    <h1>AquaRisk</h1>
-    <p>Predictive Groundwater Intelligence Platform</p>
-</header>
+<!-- ── NAV ──────────────────────────────────────────────────── -->
+<nav>
+    <div class="nav-logo">Aqua<span>Risk</span></div>
+    <ul class="nav-links">
+        <li><a href="#capabilities">Capabilities</a></li>
+        <li><a href="#methodology">Methodology</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="https://YOUR_DASHBOARD_URL.com" class="nav-cta">Access Platform</a></li>
+    </ul>
+</nav>
 
-<section class="hero">
-    <h2>
-        Quantifying groundwater-driven capital risk for agricultural and industrial assets.
-    </h2>
-    <p style="max-width:700px; margin:20px auto; font-size:18px; color:#cbd5e1;">
-        AquaRisk transforms groundwater uncertainty into measurable financial exposure,
-        enabling asset managers and operators to make risk-informed investment decisions.
-    </p>
-    <button class="cta-button" onclick="window.location.href='https://TU_DASHBOARD_AQUI.com'">
-        Access Platform
-    </button>
-</section>
+<!-- ── HERO ─────────────────────────────────────────────────── -->
+<section class="hero" id="top">
+    <div class="hero-inner">
+        <span class="hero-eyebrow">Predictive Groundwater Intelligence</span>
 
-<section class="section">
-    <h2>Why AquaRisk?</h2>
-    <p style="max-width:800px; margin:20px auto; color:#cbd5e1;">
-        AquaRisk converts groundwater uncertainty into measurable financial exposure.
-        Our proprietary risk engine quantifies the probability and magnitude of
-        capital impairment driven by hydrological stress.
-    </p>
+        <h1>
+            Quantify the <em>capital risk</em><br>
+            beneath your operations.
+        </h1>
 
-    <div class="pricing">
+        <p class="hero-sub">
+            AquaRisk translates groundwater uncertainty into measurable financial exposure — giving
+            asset managers and large-scale operators the intelligence to act before risk materializes.
+        </p>
 
-        <div class="card">
-            <h3>Probability of Operational Impairment</h3>
-            <p style="font-size:14px; color:#94a3b8;">
-                Likelihood that groundwater levels fall below critical thresholds
-                within a defined time horizon.
-            </p>
-            <p style="margin-top:15px; font-size:13px; color:#64748b;">
-                Monte Carlo simulation-based probability modeling.
-            </p>
+        <div class="hero-actions">
+            <a href="https://YOUR_DASHBOARD_URL.com" class="btn-primary">Access Platform</a>
+            <a href="#pricing" class="btn-ghost">View Pricing</a>
         </div>
 
-        <div class="card">
-            <h3>Water Value at Risk (W-VaR)</h3>
-            <p style="font-size:14px; color:#94a3b8;">
-                Maximum expected financial loss associated with groundwater stress
-                under adverse scenarios.
-            </p>
-            <p style="margin-top:15px; font-size:13px; color:#64748b;">
-                Confidence-interval based downside exposure metric.
-            </p>
+        <div class="hero-strip">
+            <div class="strip-item">
+                <span class="strip-number">2,000+</span>
+                <span class="strip-label">Monte Carlo simulations per asset</span>
+            </div>
+            <div class="strip-item">
+                <span class="strip-number">4</span>
+                <span class="strip-label">Stress-tested operating scenarios</span>
+            </div>
+            <div class="strip-item">
+                <span class="strip-number">24 mo</span>
+                <span class="strip-label">Probabilistic forecast horizon</span>
+            </div>
+            <div class="strip-item">
+                <span class="strip-number">ACEI™</span>
+                <span class="strip-label">Proprietary risk index</span>
+            </div>
         </div>
-
-        <div class="card">
-            <h3>Capital Exposure Index (CEI)</h3>
-            <p style="font-size:14px; color:#94a3b8;">
-                Quantifies total capital at risk by combining probability of
-                threshold breach with asset valuation.
-            </p>
-            <p style="margin-top:15px; font-size:13px; color:#64748b;">
-                Proprietary groundwater risk indicator.
-            </p>
-        </div>
-
     </div>
 </section>
 
-<section class="section">
-    <h2>Our Services</h2>
-    <p>Monte Carlo simulations, scenario modeling, capital exposure analytics, portfolio groundwater risk management.</p>
-</section>
+<!-- ── WHY ──────────────────────────────────────────────────── -->
+<section class="why-section" id="capabilities">
+    <div class="section-inner">
+        <span class="section-label">Why AquaRisk</span>
+        <h2 class="section-title">Three metrics that define your exposure.</h2>
+        <p class="section-body">
+            Groundwater risk is not a geological abstraction — it is a capital allocation problem.
+            AquaRisk quantifies it in terms that boards and asset managers can act on.
+        </p>
 
-<section class="section">
-    <h2>Pricing</h2>
-    <div class="pricing">
-
-        <!-- PROFESSIONAL -->
-        <div class="card">
-            <h3>Professional</h3>
-
-            <div class="price">$299 / month</div>
-
-            <div class="features">
-                <p>Up to 5 assets</p>
-                <p>Groundwater level analysis</p>
-                <p>Recharge estimation</p>
-                <p>Automated PDF report</p>
-                <p>Email support</p>
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 2v20M2 12h20" stroke-linecap="round"/><circle cx="12" cy="12" r="4"/></svg>
+                </div>
+                <h3>Probability of Operational Impairment</h3>
+                <p>Likelihood that groundwater levels breach critical thresholds within a defined time horizon, expressed as an exceedance probability across 2,000 simulations.</p>
+                <span class="tag">Monte Carlo engine</span>
             </div>
 
-            <button class="plan-button professional-btn">
-                Start Professional
-            </button>
-        </div>
-
-        <!-- ADVANCED -->
-        <div class="card featured">
-            <div class="badge">Most Popular</div>
-
-            <h3>Advanced</h3>
-
-            <div class="price">$790 / month</div>
-
-            <div class="features">
-                <p>Up to 20 assets</p>
-                <p>Advanced trend detection</p>
-                <p>Financial risk metrics</p>
-                <p>Scenario simulation</p>
-                <p>Priority support</p>
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 18l6-6 4 4 8-10" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </div>
+                <h3>Water Value at Risk (W-VaR)</h3>
+                <p>Maximum expected financial loss attributable to groundwater stress under adverse scenarios, modeled at the 95th percentile confidence interval.</p>
+                <span class="tag">Downside exposure metric</span>
             </div>
 
-            <button class="plan-button advanced-btn">
-                Start Advanced
-            </button>
-        </div>
-
-        <!-- ENTERPRISE -->
-        <div class="card">
-            <h3>Enterprise</h3>
-
-            <div class="price">Custom pricing</div>
-
-            <div class="features">
-                <p>Unlimited assets</p>
-                <p>Portfolio-level groundwater risk analytics</p>
-                <p>Custom modeling & integrations</p>
-                <p>Strategic advisory sessions</p>
-                <p>Institutional reporting</p>
-                <p>Dedicated support</p>
+            <div class="metric-card">
+                <div class="metric-icon">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4" stroke-linecap="round"/></svg>
+                </div>
+                <h3>Asset Capital Exposure Index (ACEI™)</h3>
+                <p>Proprietary composite index combining exceedance probability, decline rate, proximity to threshold, and forecast volatility into a single 0–100 actionable score.</p>
+                <span class="tag">Proprietary AquaRisk indicator</span>
             </div>
-
-            <button class="plan-button enterprise-btn">
-                Request Enterprise Access
-            </button>
         </div>
-
     </div>
 </section>
 
+<!-- ── CAPABILITIES ──────────────────────────────────────────── -->
+<section id="methodology">
+    <div class="section-inner">
+        <span class="section-label">Platform Capabilities</span>
+        <h2 class="section-title">From raw monitoring data<br>to strategic intelligence.</h2>
+        <p class="section-body">
+            A ten-stage analytical pipeline that transforms well-level time series into
+            probabilistic risk intelligence, scenario analysis, and capital optimization guidance.
+        </p>
+
+        <div class="capabilities-grid">
+            <div class="cap-item">
+                <span class="cap-num">01</span>
+                <div class="cap-text">
+                    <h4>Multi-Model Predictive Engine</h4>
+                    <p>Three parallel forecasting approaches — trend, hybrid physical-statistical, and smoothed — combined via a weighted ensemble for robust projections.</p>
+                </div>
+            </div>
+            <div class="cap-item">
+                <span class="cap-num">02</span>
+                <div class="cap-text">
+                    <h4>Monte Carlo Uncertainty Quantification</h4>
+                    <p>2,000 AR(1)-correlated simulations per asset generating P5–P95 uncertainty bands and probabilistic breach timelines.</p>
+                </div>
+            </div>
+            <div class="cap-item">
+                <span class="cap-num">03</span>
+                <div class="cap-text">
+                    <h4>Scenario Stress Testing</h4>
+                    <p>Four defined operating scenarios — Baseline, Climatic Stress, Production Expansion, and Sustainability Strategy — for comparative risk ranking.</p>
+                </div>
+            </div>
+            <div class="cap-item">
+                <span class="cap-num">04</span>
+                <div class="cap-text">
+                    <h4>Pumping Optimization Solver</h4>
+                    <p>Determines the minimum pumping reduction required to achieve a target risk level, enabling cost-efficient operational adjustments.</p>
+                </div>
+            </div>
+            <div class="cap-item">
+                <span class="cap-num">05</span>
+                <div class="cap-text">
+                    <h4>Portfolio-Level Risk Aggregation</h4>
+                    <p>ACEI™ scores aggregated across all monitored assets, providing a single portfolio exposure score for executive oversight.</p>
+                </div>
+            </div>
+            <div class="cap-item">
+                <span class="cap-num">06</span>
+                <div class="cap-text">
+                    <h4>Executive PDF Reporting</h4>
+                    <p>Automated institutional-grade reports with key metrics, forecast visualizations, and structured risk summaries — ready for board presentation.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── PROCESS ───────────────────────────────────────────────── -->
+<section style="background:var(--deep); border-top:1px solid var(--border);">
+    <div class="section-inner">
+        <span class="section-label">How It Works</span>
+        <h2 class="section-title">Intelligence in four steps.</h2>
+
+        <div class="process-list">
+            <div class="process-item">
+                <span class="process-step">01</span>
+                <div class="process-content">
+                    <h4>Upload your monitoring data</h4>
+                    <p>Submit historical groundwater level data from your wells via our secure platform. Standard CSV format accepted — no proprietary sensor required.</p>
+                </div>
+            </div>
+            <div class="process-item">
+                <span class="process-step">02</span>
+                <div class="process-content">
+                    <h4>The engine runs your risk model</h4>
+                    <p>Our multi-model ensemble and Monte Carlo simulation engine processes your data through all four operational scenarios, generating probabilistic forecasts and ACEI™ scores within minutes.</p>
+                </div>
+            </div>
+            <div class="process-item">
+                <span class="process-step">03</span>
+                <div class="process-content">
+                    <h4>Review your risk intelligence dashboard</h4>
+                    <p>Explore interactive scenario comparisons, uncertainty bands, threshold crossing probabilities, and portfolio-level exposure in a clean executive interface.</p>
+                </div>
+            </div>
+            <div class="process-item">
+                <span class="process-step">04</span>
+                <div class="process-content">
+                    <h4>Act on structured recommendations</h4>
+                    <p>Each ACEI™ category carries a specific operational advisory — from maintaining current posture to immediate capital review — with quantified pumping optimization guidance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── PRICING ───────────────────────────────────────────────── -->
+<section class="pricing-section" id="pricing">
+    <div class="section-inner">
+        <span class="section-label">Pricing</span>
+        <h2 class="section-title">Structured for serious operators.</h2>
+        <p class="section-body">
+            Subscription plans designed for agricultural enterprises, industrial operators,
+            and institutional asset managers with material groundwater exposure.
+        </p>
+
+        <div class="pricing-grid">
+
+            <!-- PROFESSIONAL -->
+            <div class="price-card">
+                <div class="plan-name">Professional</div>
+                <div class="plan-price">$299 <span class="period">/ month</span></div>
+                <p class="plan-desc">
+                    Entry-level risk monitoring for operators managing a small number of groundwater assets.
+                </p>
+                <ul class="plan-features">
+                    <li>Up to 5 monitored assets</li>
+                    <li>Groundwater level analysis</li>
+                    <li>Recharge estimation</li>
+                    <li>Automated PDF report (monthly)</li>
+                    <li>Email support</li>
+                </ul>
+                <a href="#" class="plan-btn">Start Professional</a>
+            </div>
+
+            <!-- ADVANCED -->
+            <div class="price-card featured">
+                <div class="plan-badge">Most Popular</div>
+                <div class="plan-name">Advanced</div>
+                <div class="plan-price">$790 <span class="period">/ month</span></div>
+                <p class="plan-desc">
+                    Full risk intelligence for mid-scale operations with multiple assets across one or more locations.
+                </p>
+                <ul class="plan-features">
+                    <li>Up to 20 monitored assets</li>
+                    <li>Advanced trend detection</li>
+                    <li>ACEI™ scoring per asset</li>
+                    <li>Financial risk metrics (W-VaR)</li>
+                    <li>4-scenario stress testing</li>
+                    <li>Priority support</li>
+                </ul>
+                <a href="#" class="plan-btn primary">Start Advanced</a>
+            </div>
+
+            <!-- ENTERPRISE -->
+            <div class="price-card">
+                <div class="plan-name">Enterprise</div>
+                <div class="plan-price"><span class="custom">Custom</span></div>
+                <p class="plan-desc">
+                    Institutional-grade deployment for large portfolios, fund managers, and operators requiring custom integration.
+                </p>
+                <ul class="plan-features">
+                    <li>Unlimited assets</li>
+                    <li>Portfolio-level ACEI™ analytics</li>
+                    <li>Monte Carlo full modeling</li>
+                    <li>Custom scenario design</li>
+                    <li>Strategic advisory sessions</li>
+                    <li>Dedicated support & SLA</li>
+                </ul>
+                <a href="mailto:info@aquarisk.io" class="plan-btn">Request Enterprise Access</a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ── CTA BAND ──────────────────────────────────────────────── -->
+<section class="cta-band">
+    <div class="section-inner" style="text-align:center;">
+        <span class="section-label" style="display:block; text-align:center;">Get Started</span>
+        <h2 class="section-title" style="margin:0 auto 20px;">
+            Your groundwater risk is quantifiable.<br>
+            <em style="font-style:italic; color:var(--blue-lt);">Now it's visible.</em>
+        </h2>
+        <p class="section-body" style="margin:0 auto 44px; text-align:center;">
+            Join operators who have moved from passive monitoring to
+            active, intelligence-driven groundwater risk management.
+        </p>
+        <div style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+            <a href="https://YOUR_DASHBOARD_URL.com" class="btn-primary">Access Platform</a>
+            <a href="mailto:info@aquarisk.io" class="btn-ghost">Contact Sales</a>
+        </div>
+    </div>
+</section>
+
+<!-- ── FOOTER ────────────────────────────────────────────────── -->
 <footer>
-    <p>Contact: info@aquarisk.io</p>
+    <div class="footer-logo">AquaRisk</div>
+    <div class="footer-text">© 2025 AquaRisk Analytics. All rights reserved.</div>
+    <div class="footer-contact">
+        <a href="mailto:info@aquarisk.io">info@aquarisk.io</a>
+    </div>
 </footer>
 
 </body>
