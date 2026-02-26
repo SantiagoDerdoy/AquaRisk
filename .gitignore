@@ -1,5 +1,32 @@
+# AquaRisk — .gitignore
+
+# Environment & secrets
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+venv/
+env/
 .venv/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Outputs
 results/
-_pycache_/
+reports/
+*.pdf
+*.xlsx
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
 .vscode/
-*.pyc
+.idea/

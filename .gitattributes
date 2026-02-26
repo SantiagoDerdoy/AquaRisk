@@ -1,2 +1,25 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# AquaRisk — .gitattributes
+
+# Normalizar saltos de línea a LF en todos los archivos de texto
+* text=auto eol=lf
+
+# Python
+*.py text eol=lf
+
+# Archivos de configuración
+*.env text eol=lf
+*.toml text eol=lf
+*.txt text eol=lf
+
+# HTML/CSS
+*.html text eol=lf
+*.css  text eol=lf
+
+# Datos
+*.csv text eol=lf
+
+# Binarios — no tocar
+*.png binary
+*.jpg binary
+*.pdf binary
+*.xlsx binary
