@@ -26,7 +26,7 @@ PLAN_LIMITS = {
         "pdf_report":           True,
         "min_months":           3,
         "label":                "Professional",
-        "price_usd":            299,
+        "price_usd":            499,
     },
     "advanced": {
         "max_wells":            4,
@@ -38,7 +38,7 @@ PLAN_LIMITS = {
         "pdf_report":           True,
         "min_months":           6,
         "label":                "Advanced",
-        "price_usd":            790,
+        "price_usd":            990,
     },
     "enterprise": {
         "max_wells":            5,
@@ -50,7 +50,7 @@ PLAN_LIMITS = {
         "pdf_report":           True,
         "min_months":           12,
         "label":                "Enterprise",
-        "price_usd":            None,   # custom
+        "price_usd":            1800,   # starting from $1,800/mo
     },
 }
 

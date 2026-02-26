@@ -41,6 +41,7 @@ from core.ensemble import weighted_ensemble
 from core.risk_engine import classify_risk, calculate_time_to_threshold
 from core.acei_engine import calculate_acei
 from core.report_generator import generate_executive_pdf
+from core.weather import get_real_rain_series, apply_scenario_modifier, get_weather_summary
 
 
 # ─────────────────────────────────────────────
@@ -233,9 +234,9 @@ def render_auth():
                     "Select plan",
                     options=["professional", "advanced", "enterprise"],
                     format_func=lambda x: {
-                        "professional": "Professional — $299/mo · 2 wells · min. 3 months",
-                        "advanced":     "Advanced — $790/mo · 4 wells · min. 6 months",
-                        "enterprise":   "Enterprise — Custom · 5 wells · min. 12 months",
+                        "professional": "Professional — $499/mo · 2 wells · min. 3 months",
+                        "advanced":     "Advanced — $990/mo · 4 wells · min. 6 months",
+                        "enterprise":   "Enterprise — From $1,800/mo · 5 wells · min. 12 months",
                     }[x]
                 )
                 st.markdown(
@@ -624,8 +625,17 @@ def render_dashboard(user, selected_scenario, threshold):
     rain_coeff = RAIN_COEFF.get(selected_well_name, 0.012)
     pump_coeff = PUMP_COEFF.get(selected_well_name, 0.020)
 
-    # Models
+    # ── Real weather data (Open-Meteo) ──
+    # Try to get real precipitation; fall back to synthetic if unavailable
+    real_rain, used_real_weather = get_real_rain_series(
+        forecast_months=FORECAST_HORIZON_MONTHS
+    )
+    weather_summary = get_weather_summary()
+
+    # Models — use real precipitation when available, else synthetic
     rain, pump, et = generate_scenario(FORECAST_HORIZON_MONTHS, selected_scenario)
+    if used_real_weather:
+        rain = apply_scenario_modifier(real_rain, selected_scenario)
     trend_f  = trend_model(last_value, slope, FORECAST_HORIZON_MONTHS)
     hybrid_f = hybrid_model(last_value, slope, FORECAST_HORIZON_MONTHS,
                             rain, pump, et, rain_coeff, pump_coeff)
@@ -654,6 +664,42 @@ def render_dashboard(user, selected_scenario, threshold):
     log_analysis_run(user.user_id, well_id, selected_scenario, is_dry_run=False)
 
     st.markdown("---")
+
+    # ── Weather Widget ──
+    if weather_summary["available"]:
+        di    = weather_summary["drought_index"]
+        di_pct = int(di * 100)
+        di_color = "#10b981" if di < 0.3 else "#f59e0b" if di < 0.65 else "#ef4444"
+        di_label = "Normal" if di < 0.3 else "Moderate Drought" if di < 0.65 else "Severe Drought"
+        lm   = weather_summary["last_month_mm"]
+        fmm  = weather_summary["forecast_mm"]
+        src  = weather_summary["source"]
+        rain_tag = "🌧 Real precipitation data active" if used_real_weather else "⚠ Using synthetic precipitation"
+        rain_tag_color = "#10b981" if used_real_weather else "#f59e0b"
+
+        st.markdown(
+            f"""<div style="background:#0e1e35; border:1px solid rgba(255,255,255,0.07);
+                border-left:3px solid {di_color}; border-radius:10px;
+                padding:14px 20px; margin-bottom:16px; display:flex;
+                align-items:center; gap:24px; flex-wrap:wrap;">
+                <div>
+                    <div style="font-size:0.62rem; color:var(--muted, #4a5568);
+                                text-transform:uppercase; letter-spacing:0.1em;
+                                font-weight:700; margin-bottom:4px;">Precipitation Conditions</div>
+                    <span style="color:{di_color}; font-weight:700; font-size:0.9rem;">{di_label}</span>
+                    <span style="color:#4a5568; font-size:0.78rem; margin-left:10px;">
+                        Last month: {lm} mm
+                        {f"· Forecast: {fmm} mm/mo" if fmm else ""}
+                        · Source: {src}
+                    </span>
+                </div>
+                <div style="margin-left:auto; font-size:0.72rem;
+                            color:{rain_tag_color}; font-weight:600;">
+                    {rain_tag}
+                </div>
+            </div>""",
+            unsafe_allow_html=True
+        )
 
     # Portfolio ACEI — Enterprise only
     if user.can("portfolio_enabled") and len(well_data) > 1:
