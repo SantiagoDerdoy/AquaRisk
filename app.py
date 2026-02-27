@@ -324,16 +324,24 @@ def render_sidebar(user):
                 }[x],
                 label_visibility="collapsed"
             )
+        # Auto-suggest threshold based on last known level in session
+        default_thresh = float(THRESHOLD_LEVEL)
+        if "last_well_avg_level" in st.session_state:
+            current_avg = st.session_state["last_well_avg_level"]
+            # Only auto-adjust if config default is dangerously close to current level
+            if current_avg > 0 and abs(default_thresh - current_avg) / current_avg < 0.10:
+                default_thresh = round(current_avg * 0.80, 1)
+
         threshold = st.slider(
             "Critical Threshold (m)",
             min_value=1.0,
             max_value=100.0,
-            value=float(THRESHOLD_LEVEL),
+            value=default_thresh,
             step=0.5,
             help="Set the groundwater level (m) below which operations are at risk. "
-                 "Tip: set this 15–25% below your current average level to see realistic risk."
+                 "Tip: set this 15–25% below your current average level to see realistic forward-looking risk."
         )
-        st.markdown("---")
+            st.markdown("---")
 
         if st.button("Sign Out"):
             logout_user()
@@ -758,6 +766,9 @@ def render_dashboard(user, selected_scenario, threshold):
         x2 = np.arange(len(historical))
         slope, _ = np.polyfit(x2, historical, 1)
 
+    # Store average for threshold auto-suggestion in sidebar
+    st.session_state["last_well_avg_level"] = float(sum(historical) / len(historical))
+
     # Anomaly warning banner
     if anomaly_report.has_anomalies:
         bc = "#ef4444" if anomaly_report.n_critical > 0 else "#f59e0b"
@@ -910,13 +921,37 @@ def render_dashboard(user, selected_scenario, threshold):
             unsafe_allow_html=True
         )
 
-    # Metrics
+    # ── Threshold sanity check ────────────────────────────
+    already_breached = last_value <= threshold
+
+    if already_breached:
+        st.markdown(
+            f"""<div style="background:#1a0e0e; border:1px solid rgba(239,68,68,0.3);
+                border-left:4px solid #ef4444; border-radius:8px;
+                padding:12px 18px; margin-bottom:12px; font-size:0.85rem; color:#fca5a5;">
+                ⚠ <strong>Current level ({last_value:.2f} m) is already at or below the threshold
+                ({threshold:.1f} m).</strong><br>
+                <span style="color:#94a3b8; font-size:0.78rem;">
+                Exceedance probability and breach timing reflect the current state.
+                To see forward-looking risk, raise the threshold above your current level
+                or review whether your threshold is correctly calibrated.
+                </span>
+            </div>""",
+            unsafe_allow_html=True
+        )
+
+    # ── Metrics ───────────────────────────────────────────
     m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Current Level",          f"{last_value:.2f} m")
+    m1.metric("Current Level", f"{last_value:.2f} m")
     m2.metric("Exceedance Probability", f"{probability:.1%}")
-    m3.metric("Risk Classification",    risk)
-    m4.metric("Threshold Crossing",
-              f"{mean_cross:.1f} mo" if mean_cross is not None else "Not reached")
+    m3.metric("Risk Classification", risk)
+
+    if already_breached:
+        m4.metric("Threshold Crossing", "Already breached")
+    elif mean_cross is not None:
+        m4.metric("Threshold Crossing", f"{mean_cross:.1f} mo")
+    else:
+        m4.metric("Threshold Crossing", "Not reached")
 
     # ACEI
     if user.can("acei_enabled"):
