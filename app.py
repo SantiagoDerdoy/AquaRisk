@@ -1006,28 +1006,32 @@ def render_dashboard(user, selected_scenario, threshold):
 
     # ── Model confidence badge ──
     conf_lbl, conf_clr = confidence_label(coeffs.confidence)
-    improve_link = (
-        "<span style='color:#4a5568;'>· "
-        "<a href='#' style='color:#3b82f6;font-size:0.75rem;'>Improve in My Wells →</a>"
-        "</span>"
-        if coeffs.confidence < 75 else ""
+    if coeffs.confidence < 75:
+        improve_link = (
+            '<span style="color:#4a5568; margin-left:4px;">· '
+            '<a href="#" style="color:#3b82f6;font-size:0.75rem;text-decoration:none;">'
+            'Improve in My Wells \u2192</a></span>'
+        )
+    else:
+        improve_link = ""
+
+    badge_html = (
+        '<div style="display:inline-flex;align-items:center;gap:10px;'
+        'background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);'
+        'border-radius:100px;padding:6px 16px;margin-bottom:12px;font-size:0.78rem;">'
+        '<div style="background:rgba(255,255,255,0.05);border-radius:100px;'
+        'height:5px;width:80px;overflow:hidden;">'
+        '<div style="height:100%;width:' + str(coeffs.confidence) + '%;'
+        'background:' + conf_clr + ';border-radius:100px;"></div>'
+        '</div>'
+        '<span style="color:' + conf_clr + ';font-weight:600;">'
+        + str(coeffs.confidence) + '% model confidence</span>'
+        '<span style="color:#4a5568;margin:0 4px;">·</span>'
+        '<span style="color:#64748b;">' + coeffs.aquifer_type + '</span>'
+        + improve_link +
+        '</div>'
     )
-    st.markdown(
-        f"""<div style="display:inline-flex; align-items:center; gap:10px;
-            background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
-            border-radius:100px; padding:6px 16px; margin-bottom:12px; font-size:0.78rem;">
-            <div style="background:rgba(255,255,255,0.05); border-radius:100px;
-                        height:5px; width:80px; overflow:hidden;">
-                <div style="height:100%; width:{coeffs.confidence}%;
-                            background:{conf_clr}; border-radius:100px;"></div>
-            </div>
-            <span style="color:{conf_clr}; font-weight:600;">{coeffs.confidence}% model confidence</span>
-            <span style="color:#4a5568;">·</span>
-            <span style="color:#4a5568;">{coeffs.aquifer_type}</span>
-            {improve_link}
-        </div>""",
-        unsafe_allow_html=True
-    )
+    st.markdown(badge_html, unsafe_allow_html=True)
 
     # Anomaly warning banner
     if anomaly_report.has_anomalies:
@@ -1126,6 +1130,7 @@ def render_dashboard(user, selected_scenario, threshold):
         src  = weather_summary["source"]
         rain_tag = "🌧 Real precipitation data active" if used_real_weather else "⚠ Using synthetic precipitation"
         rain_tag_color = "#10b981" if used_real_weather else "#f59e0b"
+        forecast_str = f"· Forecast: {fmm} mm/mo" if fmm else ""
 
         st.markdown(
             f"""<div style="background:#0e1e35; border:1px solid rgba(255,255,255,0.07);
@@ -1133,14 +1138,12 @@ def render_dashboard(user, selected_scenario, threshold):
                 padding:14px 20px; margin-bottom:16px; display:flex;
                 align-items:center; gap:24px; flex-wrap:wrap;">
                 <div>
-                    <div style="font-size:0.62rem; color:var(--muted, #4a5568);
+                    <div style="font-size:0.62rem; color:#4a5568;
                                 text-transform:uppercase; letter-spacing:0.1em;
                                 font-weight:700; margin-bottom:4px;">Precipitation Conditions</div>
                     <span style="color:{di_color}; font-weight:700; font-size:0.9rem;">{di_label}</span>
                     <span style="color:#4a5568; font-size:0.78rem; margin-left:10px;">
-                        Last month: {lm} mm
-                        {f"· Forecast: {fmm} mm/mo" if fmm else ""}
-                        · Source: {src}
+                        Last month: {lm} mm {forecast_str} · Source: {src}
                     </span>
                 </div>
                 <div style="margin-left:auto; font-size:0.72rem;
