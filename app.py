@@ -1006,6 +1006,12 @@ def render_dashboard(user, selected_scenario, threshold):
 
     # ── Model confidence badge ──
     conf_lbl, conf_clr = confidence_label(coeffs.confidence)
+    improve_link = (
+        "<span style='color:#4a5568;'>· "
+        "<a href='#' style='color:#3b82f6;font-size:0.75rem;'>Improve in My Wells →</a>"
+        "</span>"
+        if coeffs.confidence < 75 else ""
+    )
     st.markdown(
         f"""<div style="display:inline-flex; align-items:center; gap:10px;
             background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
@@ -1018,7 +1024,7 @@ def render_dashboard(user, selected_scenario, threshold):
             <span style="color:{conf_clr}; font-weight:600;">{coeffs.confidence}% model confidence</span>
             <span style="color:#4a5568;">·</span>
             <span style="color:#4a5568;">{coeffs.aquifer_type}</span>
-            {"<span style='color:#4a5568;'>· <a href='#' style='color:#3b82f6;font-size:0.75rem;'>Improve in My Wells →</a></span>" if coeffs.confidence < 75 else ""}
+            {improve_link}
         </div>""",
         unsafe_allow_html=True
     )
