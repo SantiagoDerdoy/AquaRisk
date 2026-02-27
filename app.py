@@ -42,6 +42,7 @@ from core.risk_engine import classify_risk, calculate_time_to_threshold
 from core.acei_engine import calculate_acei
 from core.report_generator import generate_executive_pdf
 from core.weather import get_real_rain_series, apply_scenario_modifier, get_weather_summary
+from core.anomaly_detector import detect_anomalies, format_anomaly_for_display
 
 
 # ─────────────────────────────────────────────
@@ -446,34 +447,105 @@ def render_data_entry(user):
 
         col1, col2 = st.columns([1, 2])
         with col1:
-            if st.button("💾 Save Readings"):
-                rows, errors = [], []
-                for i, row in edited_df.iterrows():
-                    date_val = str(row["Date"]).strip()
-                    try:
-                        date.fromisoformat(date_val)
-                    except ValueError:
-                        errors.append(f"Row {i+1}: invalid date '{date_val}'. Use YYYY-MM-DD.")
-                        continue
-                    try:
-                        level = float(row["Water Level (m)"])
-                        if not (0 <= level <= 500):
-                            errors.append(f"Row {i+1}: level must be 0–500 m.")
-                            continue
-                    except (TypeError, ValueError):
-                        errors.append(f"Row {i+1}: water level must be a number.")
-                        continue
-                    rows.append({"reading_date": date_val, "water_level": level,
-                                 "notes": str(row.get("Notes","")).strip()})
+            run_validation = st.button("🔍 Validate & Save")
 
-                if errors:
-                    for e in errors: st.error(e)
-                    st.warning("⚠️ Readings not saved. Fix errors above — no analysis credits consumed.")
-                elif len(rows) < 3:
-                    st.error("Please enter at least 3 readings to enable forecasting.")
+        if run_validation:
+            rows, errors = [], []
+            for i, row in edited_df.iterrows():
+                date_val = str(row["Date"]).strip()
+                try:
+                    date.fromisoformat(date_val)
+                except ValueError:
+                    errors.append(f"Row {i+1}: invalid date '{date_val}'. Use YYYY-MM-DD.")
+                    continue
+                try:
+                    level = float(row["Water Level (m)"])
+                    if not (0 <= level <= 500):
+                        errors.append(f"Row {i+1}: level must be 0–500 m.")
+                        continue
+                except (TypeError, ValueError):
+                    errors.append(f"Row {i+1}: water level must be a number.")
+                    continue
+                rows.append({"reading_date": date_val, "water_level": level,
+                             "notes": str(row.get("Notes","")).strip()})
+
+            if errors:
+                for e in errors:
+                    st.error(e)
+                st.warning("⚠️ Readings not saved. Fix format errors above.")
+
+            elif len(rows) < 3:
+                st.error("Please enter at least 3 readings to enable forecasting.")
+
+            else:
+                # ── Run anomaly detection ──
+                dates_list  = [r["reading_date"] for r in rows]
+                values_list = [r["water_level"]  for r in rows]
+                report = detect_anomalies(dates_list, values_list)
+
+                if report.has_anomalies:
+                    severity_color = "#ef4444" if report.n_critical > 0 else "#f59e0b"
+                    st.markdown(
+                        f"""<div style="background:#0e1e35;
+                            border-left:4px solid {severity_color};
+                            border-radius:8px; padding:16px 20px; margin-bottom:16px;">
+                            <div style="color:{severity_color}; font-weight:700;
+                                        font-size:0.9rem; margin-bottom:8px;">
+                                ⚠ {report.summary}
+                            </div>
+                            <div style="font-size:0.8rem; color:#718096;">
+                                Anomalous readings will be auto-corrected via interpolation
+                                before being used in the forecast model.
+                                Your original data is preserved below.
+                            </div>
+                        </div>""",
+                        unsafe_allow_html=True
+                    )
+
+                    # Show flag table
+                    import pandas as _pd
+                    flag_rows = [format_anomaly_for_display(f) for f in report.flags]
+                    flag_df = _pd.DataFrame(flag_rows)[
+                        ["icon", "date", "value", "issue", "suggestion", "severity"]
+                    ]
+                    flag_df.columns = ["", "Date", "Value", "Issue", "Suggested Fix", "Severity"]
+                    st.dataframe(flag_df, use_container_width=True, hide_index=True)
+
+                    if not report.model_safe:
+                        st.error(
+                            "⛔ More than 25% of readings appear anomalous. "
+                            "Please review your data carefully before saving."
+                        )
+
+                    # Two options: save original or save clean
+                    st.markdown("**Choose how to save:**")
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        if st.button("💾 Save with auto-corrections", key="save_clean"):
+                            clean_rows = [
+                                {**r, "water_level": v}
+                                for r, v in zip(rows, report.clean_values)
+                            ]
+                            err = save_readings_bulk(well_id, user.user_id, clean_rows)
+                            if err:
+                                st.error(err)
+                            else:
+                                st.success(f"✅ {len(clean_rows)} readings saved (anomalies corrected).")
+                                st.rerun()
+                    with c2:
+                        if st.button("💾 Save original data as-is", key="save_original"):
+                            err = save_readings_bulk(well_id, user.user_id, rows)
+                            if err:
+                                st.error(err)
+                            else:
+                                st.success(f"✅ {len(rows)} readings saved (original data).")
+                                st.rerun()
                 else:
+                    # No anomalies — save directly
+                    st.success("✅ All readings passed validation.")
                     err = save_readings_bulk(well_id, user.user_id, rows)
-                    if err: st.error(err)
+                    if err:
+                        st.error(err)
                     else:
                         st.success(f"✅ {len(rows)} readings saved for **{selected_well_name}**.")
                         st.rerun()
@@ -621,6 +693,30 @@ def render_dashboard(user, selected_scenario, threshold):
 
     x = np.arange(len(historical))
     slope, _ = np.polyfit(x, historical, 1)
+
+    # ── Auto-clean anomalies before modeling ──
+    readings_raw = get_well_readings(well_id, user.user_id)
+    dates_list   = [r["reading_date"] for r in readings_raw]
+    anomaly_report = detect_anomalies(dates_list, list(historical))
+    if anomaly_report.has_anomalies:
+        historical = np.array(anomaly_report.clean_values)
+        last_value = float(historical[-1])
+        x2 = np.arange(len(historical))
+        slope, _ = np.polyfit(x2, historical, 1)
+
+    # Anomaly warning banner
+    if anomaly_report.has_anomalies:
+        bc = "#ef4444" if anomaly_report.n_critical > 0 else "#f59e0b"
+        st.markdown(
+            f"""<div style="background:#0e1e35; border-left:3px solid {bc};
+                border-radius:8px; padding:12px 18px; margin-bottom:8px;
+                font-size:0.82rem; color:#94a3b8;">
+                ⚠ <strong style="color:{bc};">{anomaly_report.n_flagged} anomalous reading(s)</strong>
+                detected in this well's data — auto-corrected for modeling.
+                Go to <strong>Data Entry</strong> to review and fix permanently.
+            </div>""",
+            unsafe_allow_html=True
+        )
 
     rain_coeff = RAIN_COEFF.get(selected_well_name, 0.012)
     pump_coeff = PUMP_COEFF.get(selected_well_name, 0.020)
