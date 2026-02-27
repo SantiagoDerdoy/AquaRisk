@@ -64,14 +64,28 @@ def calibrate_from_profile(profile: dict) -> AquiferCoefficients:
         "use_type", "level_trend"
     ] if k in profile and profile[k] not in (None, "", "unknown"))
 
-    # ── 1. Artesian pressure → confined aquifer ──────────
-    artesian = profile.get("artesian_pressure", False)
+    # ── 1. Confined aquifer detection ─────────────────────
+    # Two signals: artesian (water reaches surface) OR
+    # piezometric recovery (level stabilizes at fixed point after pumping stops)
+    artesian        = profile.get("artesian_pressure", False)
+    piezometric     = profile.get("piezometric_recovery", False)
+    is_confined     = artesian or piezometric
+
     if artesian:
-        # Confined aquifer: less sensitive to rain, more stable
-        rain_coeff   = 0.004
-        noise_sd     = 0.18
-        aquifer_type = "Confined artesian"
-        notes.append("Confined aquifer detected — lower recharge sensitivity, more stable behavior.")
+        # Fully artesian — confined with head above surface
+        rain_coeff   = 0.003
+        noise_sd     = 0.15
+        aquifer_type = "Confined artesian (surgent)"
+        notes.append("Artesian conditions confirmed — water rises to surface under natural pressure. "
+                     "Confined aquifer with very low recharge sensitivity.")
+        confidence  += 14
+    elif piezometric:
+        # Confined but not surgent — head below surface, still pressurized
+        rain_coeff   = 0.005
+        noise_sd     = 0.20
+        aquifer_type = "Confined (non-surgent)"
+        notes.append("Piezometric behavior detected — confined aquifer. "
+                     "Level stabilizes at fixed depth after pumping. Low recharge sensitivity.")
         confidence  += 12
     else:
         # Unconfined: more responsive to rain

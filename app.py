@@ -43,10 +43,23 @@ from core.acei_engine import calculate_acei
 from core.report_generator import generate_executive_pdf
 from core.weather import get_real_rain_series, apply_scenario_modifier, get_weather_summary
 from core.anomaly_detector import detect_anomalies, format_anomaly_for_display
-from core.aquifer_profile import (
-    calibrate_from_profile, get_well_coefficients,
-    save_well_profile, confidence_label, AquiferCoefficients,
-)
+try:
+    from core.aquifer_profile import (
+        calibrate_from_profile, get_well_coefficients,
+        save_well_profile, confidence_label, AquiferCoefficients,
+    )
+except ImportError:
+    # Fallback if aquifer_profile.py not yet deployed
+    from dataclasses import dataclass, field
+    @dataclass
+    class AquiferCoefficients:
+        rain_coeff: float = 0.015; pump_coeff: float = 0.020
+        noise_sd: float = 0.30;   confidence: int   = 55
+        aquifer_type: str = "Default"; notes: list = field(default_factory=list)
+    def calibrate_from_profile(p): return AquiferCoefficients()
+    def get_well_coefficients(w):  return AquiferCoefficients()
+    def save_well_profile(wid, uid, p): return None
+    def confidence_label(s): return ("Baseline", "#f59e0b")
 from core.alerts import (
     send_alert_email, get_alert_level,
     log_alert_sent, was_alert_sent_recently,
@@ -521,24 +534,41 @@ def render_wells_page(user):
                 with col4:
                     artesian_val = "yes" if profile.get("artesian_pressure") else "no"
                     artesian = st.selectbox(
-                        "Does water rise toward the surface on its own?",
+                        "Does water rise to the surface on its own (without pumping)?",
                         options=["no", "yes"],
                         index=1 if artesian_val == "yes" else 0,
                         format_func=lambda x: {
-                            "no":  "No — we need to pump it",
-                            "yes": "Yes — water comes up under its own pressure",
+                            "no":  "No — we always need to pump it",
+                            "yes": "Yes — water flows out or overflows naturally",
                         }[x],
-                        help="Artesian wells indicate a confined aquifer — very different model behavior."
+                        help="True artesian wells: water reaches surface under natural pressure. "
+                             "Indicates a fully confined aquifer with head above ground level."
                     )
+
+                st.markdown("")
+                piezometric_val = "yes" if profile.get("piezometric_recovery") else "no"
+                piezometric = st.selectbox(
+                    "When you stop pumping, does the water level rise back and stabilize at roughly the same depth each time?",
+                    options=["no", "yes", "unsure"],
+                    index={"yes": 1, "no": 0, "unsure": 2}.get(piezometric_val, 0),
+                    format_func=lambda x: {
+                        "no":     "No — level just slowly recovers or keeps declining",
+                        "yes":    "Yes — it rises back and holds steady at a consistent level",
+                        "unsure": "Not sure / haven't observed this",
+                    }[x],
+                    help="This is the key indicator of a confined (pressurized) aquifer even when "
+                         "water doesn't reach the surface. The stabilization depth is the piezometric level."
+                )
 
                 # Live confidence preview
                 preview_profile = {k: v for k, v in {
-                    "artesian_pressure": artesian == "yes",
-                    "rain_response":     rain_response or None,
-                    "well_depth_ft":     well_depth if well_depth > 0 else None,
-                    "pump_rate_gpm":     pump_rate  if pump_rate  > 0 else None,
-                    "use_type":          use_type   or None,
-                    "level_trend":       level_trend or None,
+                    "artesian_pressure":   artesian == "yes",
+                    "piezometric_recovery": piezometric == "yes",
+                    "rain_response":       rain_response or None,
+                    "well_depth_ft":       well_depth if well_depth > 0 else None,
+                    "pump_rate_gpm":       pump_rate  if pump_rate  > 0 else None,
+                    "use_type":            use_type   or None,
+                    "level_trend":         level_trend or None,
                 }.items() if v is not None}
                 prev_coeffs = calibrate_from_profile(preview_profile)
                 prev_label, prev_color = confidence_label(prev_coeffs.confidence)
@@ -572,12 +602,13 @@ def render_wells_page(user):
 
             if save_profile_btn:
                 new_profile = {
-                    "artesian_pressure": artesian == "yes",
-                    "rain_response":     rain_response or None,
-                    "well_depth_ft":     well_depth if well_depth > 0 else None,
-                    "pump_rate_gpm":     pump_rate  if pump_rate  > 0 else None,
-                    "use_type":          use_type   or None,
-                    "level_trend":       level_trend or None,
+                    "artesian_pressure":    artesian == "yes",
+                    "piezometric_recovery": piezometric == "yes",
+                    "rain_response":        rain_response or None,
+                    "well_depth_ft":        well_depth if well_depth > 0 else None,
+                    "pump_rate_gpm":        pump_rate  if pump_rate  > 0 else None,
+                    "use_type":             use_type   or None,
+                    "level_trend":          level_trend or None,
                 }
                 err = save_well_profile(w["id"], user.user_id, new_profile)
                 if err:
@@ -930,7 +961,7 @@ def render_dashboard(user, selected_scenario, threshold):
         st.warning("No wells found. Go to **My Wells** to add a well first.")
         return
 
-    # Build wells with data
+    # Build wells with data — keep full well object for profile access
     well_data = {}
     for w in wells:
         readings = get_well_readings(w["id"], user.user_id)
@@ -941,6 +972,7 @@ def render_dashboard(user, selected_scenario, threshold):
             well_data[w["well_name"]] = {
                 "id":     w["id"],
                 "levels": df_r["water_level"].astype(float).values,
+                "_well":  w,   # full well object for profile/coefficients
             }
 
     if not well_data:
@@ -952,6 +984,9 @@ def render_dashboard(user, selected_scenario, threshold):
     historical = info["levels"]
     well_id    = info["id"]
     last_value = float(historical[-1])
+
+    # ── Coefficients from Well Profile (before any rendering) ──
+    coeffs     = get_well_coefficients(info["_well"])
 
     x = np.arange(len(historical))
     slope, _ = np.polyfit(x, historical, 1)
@@ -1003,14 +1038,12 @@ def render_dashboard(user, selected_scenario, threshold):
         )
 
     # ── Per-well calibrated coefficients from profile ──
-    well_data  = well_options[selected_well_name]
-    coeffs     = get_well_coefficients(well_data)
+    # (already computed above as `coeffs` — reuse it)
     rain_coeff = coeffs.rain_coeff
     pump_coeff = coeffs.pump_coeff
 
     # Override NOISE_SD with calibrated value for this well
     import config as _cfg2
-    _original_noise = _cfg2.NOISE_SD.get(selected_well_name)
     _cfg2.NOISE_SD[selected_well_name] = coeffs.noise_sd
 
     # ── Real weather data (Open-Meteo) ──

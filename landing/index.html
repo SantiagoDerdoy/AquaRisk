@@ -88,15 +88,26 @@ section{padding:110px 52px;position:relative;z-index:1;}
 
 /* DEMO */
 .demo-section{background:var(--ink);}
-.demo-container{margin-top:56px;background:var(--panel);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,0.6);}
-.demo-topbar{background:#080e18;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;}
+.demo-container{margin-top:56px;background:var(--panel);border:1px solid var(--border);border-radius:20px;overflow:visible;box-shadow:0 40px 80px rgba(0,0,0,0.6);position:relative;}
+.demo-topbar{background:#080e18;border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;border-radius:20px 20px 0 0;}
+.demo-body{display:grid;grid-template-columns:220px 1fr;min-height:520px;border-radius:0 0 20px 20px;overflow:hidden;}
 .demo-dots{display:flex;gap:6px;}
 .demo-dot{width:10px;height:10px;border-radius:50%;}
 .demo-dot:nth-child(1){background:#ef4444;}
 .demo-dot:nth-child(2){background:#f59e0b;}
 .demo-dot:nth-child(3){background:#10b981;}
 .demo-url{flex:1;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:5px 14px;font-size:0.75rem;color:var(--muted);max-width:320px;margin:0 auto;text-align:center;}
-.demo-body{display:grid;grid-template-columns:220px 1fr;min-height:520px;}
+/* Custom dropdown replaces native select to avoid overflow:hidden clipping */
+.demo-dropdown{position:relative;width:100%;margin-bottom:10px;}
+.demo-dropdown-btn{width:100%;background:var(--card);border:1px solid var(--border);color:var(--bright);padding:8px 12px;border-radius:6px;font-family:'Syne',sans-serif;font-size:0.78rem;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;transition:border-color .2s;}
+.demo-dropdown-btn:hover{border-color:rgba(255,255,255,0.2);}
+.demo-dropdown-btn.active{border-color:var(--blue);}
+.demo-dropdown-list{position:absolute;bottom:calc(100% + 4px);left:0;right:0;background:#0f1d2e;border:1px solid var(--border);border-radius:8px;overflow:hidden;z-index:9000;box-shadow:0 -8px 24px rgba(0,0,0,0.5);display:none;}
+.demo-dropdown-list.open{display:block;}
+.demo-dropdown-item{padding:9px 12px;font-size:0.78rem;color:#94a3b8;cursor:pointer;transition:background .15s;}
+.demo-dropdown-item:hover{background:rgba(255,255,255,0.06);color:#e2e8f0;}
+.demo-dropdown-item.selected{color:#e2e8f0;background:rgba(37,99,235,0.15);}
+.demo-select-label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;font-weight:700;margin-bottom:5px;display:block;}
 .demo-sidebar{background:#080e18;border-right:1px solid var(--border);padding:24px 16px;display:flex;flex-direction:column;}
 .demo-sidebar-logo{font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--white);margin-bottom:4px;}
 .demo-sidebar-plan{font-size:0.62rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:20px;}
@@ -342,18 +353,30 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 52p
                     <div class="demo-nav-item"><div class="demo-nav-dot"></div>Account</div>
                     <div class="demo-controls">
                         <span class="demo-select-label">Well</span>
-                        <select class="demo-select" id="demoWell" onchange="updateDemo()">
-                            <option value="GW-01">GW-01 — North Field</option>
-                            <option value="GW-02">GW-02 — South Basin</option>
-                            <option value="GW-03">GW-03 — East Sector</option>
-                        </select>
+                        <div class="demo-dropdown" id="ddWell">
+                            <button class="demo-dropdown-btn" onclick="toggleDD('ddWell')">
+                                <span id="ddWellLabel">GW-01 — North Field</span>
+                                <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 5L5 1L9 5" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            </button>
+                            <div class="demo-dropdown-list" id="ddWellList">
+                                <div class="demo-dropdown-item selected" onclick="selectDD('ddWell','GW-01','GW-01 — North Field')">GW-01 — North Field</div>
+                                <div class="demo-dropdown-item" onclick="selectDD('ddWell','GW-02','GW-02 — South Basin')">GW-02 — South Basin</div>
+                                <div class="demo-dropdown-item" onclick="selectDD('ddWell','GW-03','GW-03 — East Sector')">GW-03 — East Sector</div>
+                            </div>
+                        </div>
                         <span class="demo-select-label">Scenario</span>
-                        <select class="demo-select" id="demoScenario" onchange="updateDemo()">
-                            <option value="baseline">Baseline Operating</option>
-                            <option value="drought">Climatic Stress</option>
-                            <option value="expansion">Production Expansion</option>
-                            <option value="sustainable">Sustainability Strategy</option>
-                        </select>
+                        <div class="demo-dropdown" id="ddScenario">
+                            <button class="demo-dropdown-btn" onclick="toggleDD('ddScenario')">
+                                <span id="ddScenarioLabel">Baseline Operating</span>
+                                <svg width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 5L5 1L9 5" stroke="#64748b" stroke-width="1.5" stroke-linecap="round"/></svg>
+                            </button>
+                            <div class="demo-dropdown-list" id="ddScenarioList">
+                                <div class="demo-dropdown-item selected" onclick="selectDD('ddScenario','baseline','Baseline Operating')">Baseline Operating</div>
+                                <div class="demo-dropdown-item" onclick="selectDD('ddScenario','drought','Climatic Stress')">Climatic Stress</div>
+                                <div class="demo-dropdown-item" onclick="selectDD('ddScenario','expansion','Production Expansion')">Production Expansion</div>
+                                <div class="demo-dropdown-item" onclick="selectDD('ddScenario','sustainable','Sustainability Strategy')">Sustainability Strategy</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="demo-main">
@@ -676,6 +699,40 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 52p
 </div>
 
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ── CUSTOM DROPDOWNS ──
+let _ddState = { ddWell: 'GW-01', ddScenario: 'baseline' };
+
+function toggleDD(id) {
+    const list = document.getElementById(id + 'List');
+    const btn  = document.querySelector('#' + id + ' .demo-dropdown-btn');
+    const isOpen = list.classList.contains('open');
+    // Close all first
+    document.querySelectorAll('.demo-dropdown-list').forEach(l => l.classList.remove('open'));
+    document.querySelectorAll('.demo-dropdown-btn').forEach(b => b.classList.remove('active'));
+    if (!isOpen) { list.classList.add('open'); btn.classList.add('active'); }
+}
+
+function selectDD(ddId, value, label) {
+    _ddState[ddId] = value;
+    document.getElementById(ddId + 'Label').textContent = label;
+    // Update selected state
+    document.querySelectorAll('#' + ddId + 'List .demo-dropdown-item').forEach(el => {
+        el.classList.toggle('selected', el.textContent.trim() === label);
+    });
+    // Close dropdown
+    document.getElementById(ddId + 'List').classList.remove('open');
+    document.querySelector('#' + ddId + ' .demo-dropdown-btn').classList.remove('active');
+    updateDemo();
+}
+
+// Close dropdowns on outside click
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.demo-dropdown')) {
+        document.querySelectorAll('.demo-dropdown-list').forEach(l => l.classList.remove('open'));
+        document.querySelectorAll('.demo-dropdown-btn').forEach(b => b.classList.remove('active'));
+    }
+});
+
 // ── DEMO ──
 const DEMO = {
     'GW-01':{
@@ -709,12 +766,12 @@ const FORE_COLORS = {green:'#10b981',amber:'#f59e0b',red:'#ef4444'};
 const BAND_COLORS = {green:'rgba(16,185,129,0.1)',amber:'rgba(245,158,11,0.1)',red:'rgba(239,68,68,0.1)'};
 
 function updateDemo(){
-    const w=document.getElementById('demoWell').value;
-    const s=document.getElementById('demoScenario').value;
-    const d=DEMO[w][s];
-    const sLabel=document.getElementById('demoScenario').options[document.getElementById('demoScenario').selectedIndex].text;
+    const w = _ddState.ddWell;
+    const s = _ddState.ddScenario;
+    const d = DEMO[w][s];
+    const sLabels = {baseline:'Baseline Operating',drought:'Climatic Stress',expansion:'Production Expansion',sustainable:'Sustainability Strategy'};
 
-    document.getElementById('demoTitle').textContent=`Well ${w} · ${sLabel}`;
+    document.getElementById('demoTitle').textContent=`Well ${w} · ${sLabels[s]}`;
     document.getElementById('demoLevel').textContent=d.level;
 
     const pEl=document.getElementById('demoProb');
