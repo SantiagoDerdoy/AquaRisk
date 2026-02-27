@@ -43,6 +43,11 @@ from core.acei_engine import calculate_acei
 from core.report_generator import generate_executive_pdf
 from core.weather import get_real_rain_series, apply_scenario_modifier, get_weather_summary
 from core.anomaly_detector import detect_anomalies, format_anomaly_for_display
+from core.alerts import (
+    send_alert_email, get_alert_level,
+    log_alert_sent, was_alert_sent_recently,
+    smtp_configured, ALERT_LEVELS,
+)
 
 
 # ─────────────────────────────────────────────
@@ -319,7 +324,15 @@ def render_sidebar(user):
                 }[x],
                 label_visibility="collapsed"
             )
-            threshold = st.slider("Critical Threshold (m)", 5.0, 50.0, float(THRESHOLD_LEVEL))
+        threshold = st.slider(
+            "Critical Threshold (m)",
+            min_value=1.0,
+            max_value=100.0,
+            value=float(THRESHOLD_LEVEL),
+            step=0.5,
+            help="Set the groundwater level (m) below which operations are at risk. "
+                 "Tip: set this 15–25% below your current average level to see realistic risk."
+        )
             st.markdown("---")
 
         if st.button("Sign Out"):
@@ -655,6 +668,47 @@ def render_account(user):
         unsafe_allow_html=True
     )
 
+    # ── Alert Settings ──
+    st.markdown("---")
+    st.markdown("**Email Alert Settings**")
+
+    smtp_ok = smtp_configured()
+
+    if not smtp_ok:
+        st.markdown(
+            """<div style="background:#0e1e35; border:1px solid rgba(255,255,255,0.07);
+                border-left:3px solid #f59e0b; border-radius:8px; padding:14px 18px;
+                font-size:0.85rem; color:#94a3b8;">
+                ⚠ Email alerts are not configured yet.<br>
+                <span style="color:#64748b; font-size:0.78rem;">
+                To enable, add <code>SMTP_HOST</code>, <code>SMTP_PORT</code>,
+                <code>SMTP_USER</code>, <code>SMTP_PASSWORD</code>
+                to your Streamlit Secrets or <code>.env</code> file.
+                Works with Gmail (App Password), SendGrid, or any SMTP provider.
+                </span>
+            </div>""",
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            """<div style="background:#0e1e35; border:1px solid rgba(255,255,255,0.07);
+                border-left:3px solid #10b981; border-radius:8px; padding:14px 18px;
+                font-size:0.85rem; color:#94a3b8; margin-bottom:16px;">
+                ✅ Email alerts are active. Alerts are sent automatically when
+                ACEI™ thresholds are exceeded (max once per 24 hours per well).
+            </div>""",
+            unsafe_allow_html=True
+        )
+
+        alert_rows = [
+            ("🟡 Watch",    f"ACEI™ ≥ {ALERT_LEVELS['watch']['acei_min']}",    "Monitoring advisory"),
+            ("🟠 Warning",  f"ACEI™ ≥ {ALERT_LEVELS['warning']['acei_min']}",  "Review recommended"),
+            ("🔴 Critical", f"ACEI™ ≥ {ALERT_LEVELS['critical']['acei_min']}", "Immediate action required"),
+        ]
+        import pandas as _pd2
+        alert_df = _pd2.DataFrame(alert_rows, columns=["Level", "Trigger", "Action"])
+        st.dataframe(alert_df, use_container_width=True, hide_index=True)
+
 
 # ─────────────────────────────────────────────
 # PAGE: DASHBOARD
@@ -740,7 +794,7 @@ def render_dashboard(user, selected_scenario, threshold):
 
     # Monte Carlo
     cleanup = patch_noise_sd(selected_well_name)
-    sims, probability, p5, p95 = run_monte_carlo(ensemble, selected_well_name)
+    sims, probability, p5, p95 = run_monte_carlo(ensemble, selected_well_name, threshold=threshold)
     cleanup()
 
     probability = float(np.asarray(probability).mean())
@@ -758,6 +812,29 @@ def render_dashboard(user, selected_scenario, threshold):
 
     # Log run
     log_analysis_run(user.user_id, well_id, selected_scenario, is_dry_run=False)
+
+    # ── Auto-alert check ──────────────────────────────────
+    alert_level = get_alert_level(acei_score) if user.can("acei_enabled") else None
+    if alert_level and not was_alert_sent_recently(user.user_id, well_id, hours=24):
+        if smtp_configured():
+            ok, msg = send_alert_email(
+                recipient_name    = user.full_name,
+                recipient_email   = user.email,
+                well_name         = selected_well_name,
+                acei_score        = acei_score,
+                acei_category     = acei_category,
+                exceedance_prob   = probability,
+                risk_level        = risk,
+                threshold_value   = threshold,
+                current_level     = last_value,
+                mean_cross_months = mean_cross,
+                scenario          = selected_scenario,
+            )
+            if ok:
+                log_alert_sent(user.user_id, well_id, selected_well_name,
+                               acei_score, alert_level["key"])
+                st.toast(f"📧 Alert email sent — ACEI™ {acei_score:.1f} ({alert_level['label']})",
+                         icon="📧")
 
     st.markdown("---")
 
@@ -810,7 +887,7 @@ def render_dashboard(user, selected_scenario, threshold):
             sf = smoothed_model(lv, sl, FORECAST_HORIZON_MONTHS)
             ef = weighted_ensemble(hf, tf, sf)
             cl = patch_noise_sd(wn)
-            _, pb, p5w, p95w = run_monte_carlo(ef, wn)
+            _, pb, p5w, p95w = run_monte_carlo(ef, wn, threshold=threshold)
             cl()
             pb = float(np.asarray(pb).mean())
             sc, _, _ = calculate_acei(pb, sl*12, lv-threshold, float(np.mean(p95w-p5w)))
@@ -909,11 +986,14 @@ def render_dashboard(user, selected_scenario, threshold):
         ax_mc.legend(facecolor="#0d1526", edgecolor="#1e293b", labelcolor="#cbd5e1", fontsize=9)
         st.pyplot(fig_mc); plt.close(fig_mc)
     else:
+        st.markdown("")
         locked_feature("Monte Carlo Risk Distribution")
+        st.markdown("")
+
+    st.markdown("---")
 
     # Scenarios
     if user.can("scenarios_enabled"):
-        st.markdown("---")
         st.markdown("#### Scenario Risk Comparison")
         sc_rows = []
         for sk in ["baseline", "drought", "expansion", "sustainable"]:
@@ -924,14 +1004,16 @@ def render_dashboard(user, selected_scenario, threshold):
             sf2 = smoothed_model(last_value, slope, FORECAST_HORIZON_MONTHS)
             ef2 = weighted_ensemble(hf2, tf2, sf2)
             cl2 = patch_noise_sd(selected_well_name)
-            _, pb2, _, _ = run_monte_carlo(ef2, selected_well_name)
+            _, pb2, _, _ = run_monte_carlo(ef2, selected_well_name, threshold=threshold)
             cl2()
             pb2 = float(np.asarray(pb2).mean())
             sc_rows.append({"Scenario": sk.title(), "Prob. (%)": f"{pb2:.1%}",
                             "Risk": classify_risk(pb2)})
         st.dataframe(pd.DataFrame(sc_rows), use_container_width=True, hide_index=True)
     else:
+        st.markdown("")
         locked_feature("Scenario Stress Testing")
+        st.markdown("")
 
     # PDF
     st.markdown("---")
