@@ -43,6 +43,10 @@ from core.acei_engine import calculate_acei
 from core.report_generator import generate_executive_pdf
 from core.weather import get_real_rain_series, apply_scenario_modifier, get_weather_summary
 from core.anomaly_detector import detect_anomalies, format_anomaly_for_display
+from core.aquifer_profile import (
+    calibrate_from_profile, get_well_coefficients,
+    save_well_profile, confidence_label, AquiferCoefficients,
+)
 from core.alerts import (
     send_alert_email, get_alert_level,
     log_alert_sent, was_alert_sent_recently,
@@ -359,7 +363,8 @@ def render_wells_page(user):
     st.title("My Wells")
     st.markdown(
         f"<div style='color:#64748b; margin-bottom:24px;'>Your plan allows "
-        f"<strong style='color:#94a3b8;'>{user.max_wells} well(s)</strong>.</div>",
+        f"<strong style='color:#94a3b8;'>{user.max_wells} well(s)</strong>. "
+        f"Complete the Well Profile on each well to improve forecast accuracy.</div>",
         unsafe_allow_html=True
     )
 
@@ -378,7 +383,7 @@ def render_wells_page(user):
                 well, err = create_well(user.user_id, well_name.strip(), well_loc.strip(), user.max_wells)
                 if err: st.error(err)
                 else:
-                    st.success(f"Well **{well['well_name']}** added.")
+                    st.success(f"Well **{well['well_name']}** added. Complete the Well Profile below.")
                     st.rerun()
 
     if not wells:
@@ -386,28 +391,223 @@ def render_wells_page(user):
         return
 
     st.markdown(f"**{len(wells)} well(s) registered**")
+    st.markdown("")
 
     for w in wells:
-        c1, c2, c3 = st.columns([3, 3, 1])
-        with c1:
+        profile    = w.get("aquifer_profile") or {}
+        coeffs     = get_well_coefficients(w)
+        conf_label_str, conf_color = confidence_label(coeffs.confidence)
+
+        # ── Well header card ──
+        st.markdown(
+            f"""<div style="background:#0f1d2e; border:1px solid rgba(255,255,255,0.07);
+                border-radius:14px; padding:20px 24px; margin-bottom:4px;
+                display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+                <div>
+                    <div style="color:#e2e8f0; font-weight:700; font-size:1rem;">{w['well_name']}</div>
+                    <div style="color:#64748b; font-size:0.8rem; margin-top:2px;">{w.get('location','—')}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                    <div style="text-align:right;">
+                        <div style="font-size:0.65rem; color:#4a5568; text-transform:uppercase;
+                                    letter-spacing:0.1em; margin-bottom:4px;">Model Confidence</div>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:100px;
+                                    height:6px; width:130px; overflow:hidden;">
+                            <div style="height:100%; width:{coeffs.confidence}%;
+                                        background:linear-gradient(90deg,{conf_color},{conf_color}99);
+                                        border-radius:100px;"></div>
+                        </div>
+                        <div style="color:{conf_color}; font-size:0.72rem; margin-top:4px;
+                                    font-weight:600;">{coeffs.confidence}% — {conf_label_str}</div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
+                                border-radius:8px; padding:8px 12px; font-size:0.72rem; color:#64748b;">
+                        {coeffs.aquifer_type}
+                    </div>
+                </div>
+            </div>""",
+            unsafe_allow_html=True
+        )
+
+        # ── Well Profile expander ──
+        profile_filled = bool(profile.get("completed_at"))
+        expander_label = (
+            "✅ Well Profile — Complete" if profile_filled
+            else "⚡ Complete Well Profile — Improve forecast accuracy"
+        )
+
+        with st.expander(expander_label, expanded=not profile_filled):
+
             st.markdown(
-                f"<div style='color:#e2e8f0; font-weight:600;'>{w['well_name']}</div>"
-                f"<div style='color:#64748b; font-size:0.82rem;'>{w.get('location','—')}</div>",
+                """<div style="background:rgba(37,99,235,0.08); border:1px solid rgba(37,99,235,0.2);
+                    border-radius:10px; padding:14px 18px; margin-bottom:20px;
+                    font-size:0.82rem; color:#94a3b8; line-height:1.6;">
+                    Answer a few plain-language questions about this well.
+                    <strong style="color:#e2e8f0;">All fields are optional</strong>
+                    — each answer improves the forecast model's calibration for your specific aquifer.
+                    No hydrogeology background needed.
+                </div>""",
                 unsafe_allow_html=True
             )
-        with c2:
+
+            with st.form(f"profile_form_{w['id']}"):
+
+                st.markdown("**About your well**")
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    well_depth = st.number_input(
+                        "Approximate well depth (feet)",
+                        min_value=0, max_value=3000,
+                        value=int(profile.get("well_depth_ft") or 0),
+                        step=10,
+                        help="How deep is the well casing? Found on your well permit or driller's log."
+                    )
+                    pump_rate = st.number_input(
+                        "Pump rate (gallons per minute)",
+                        min_value=0, max_value=5000,
+                        value=int(profile.get("pump_rate_gpm") or 0),
+                        step=10,
+                        help="Typical flow rate when pumping. Found on pump test report or equipment specs."
+                    )
+
+                with col2:
+                    use_options = ["", "irrigation", "domestic", "industrial"]
+                    use_type = st.selectbox(
+                        "Primary use",
+                        options=use_options,
+                        index=use_options.index(profile.get("use_type", "")),
+                        format_func=lambda x: {
+                            "": "— Select —",
+                            "irrigation": "🌾 Agricultural / Irrigation",
+                            "domestic":   "🏠 Domestic / Municipal",
+                            "industrial": "🏭 Industrial / Commercial",
+                        }[x],
+                        help="What is this well primarily used for?"
+                    )
+                    trend_options = ["", "declining", "stable", "recovering"]
+                    level_trend = st.selectbox(
+                        "What have you observed over the past 2–3 years?",
+                        options=trend_options,
+                        index=trend_options.index(profile.get("level_trend", "")),
+                        format_func=lambda x: {
+                            "":           "— Select —",
+                            "declining":  "📉 Water level has been dropping",
+                            "stable":     "➡ Roughly stable",
+                            "recovering": "📈 Level has been improving",
+                        }[x],
+                        help="Your direct observation helps calibrate the trend model."
+                    )
+
+                st.markdown("---")
+                st.markdown("**How your water behaves**")
+                col3, col4 = st.columns(2)
+
+                with col3:
+                    rain_options = ["", "fast", "slow", "none"]
+                    rain_response = st.selectbox(
+                        "After heavy rain, does your water level change?",
+                        options=rain_options,
+                        index=rain_options.index(profile.get("rain_response", "")),
+                        format_func=lambda x: {
+                            "":     "— Not sure —",
+                            "fast": "⚡ Yes, noticeably within days/weeks",
+                            "slow": "🐢 Yes, but slowly over months",
+                            "none": "🚫 No visible change",
+                        }[x],
+                        help="Identifies aquifer permeability — no geology knowledge needed."
+                    )
+
+                with col4:
+                    artesian_val = "yes" if profile.get("artesian_pressure") else "no"
+                    artesian = st.selectbox(
+                        "Does water rise toward the surface on its own?",
+                        options=["no", "yes"],
+                        index=1 if artesian_val == "yes" else 0,
+                        format_func=lambda x: {
+                            "no":  "No — we need to pump it",
+                            "yes": "Yes — water comes up under its own pressure",
+                        }[x],
+                        help="Artesian wells indicate a confined aquifer — very different model behavior."
+                    )
+
+                # Live confidence preview
+                preview_profile = {k: v for k, v in {
+                    "artesian_pressure": artesian == "yes",
+                    "rain_response":     rain_response or None,
+                    "well_depth_ft":     well_depth if well_depth > 0 else None,
+                    "pump_rate_gpm":     pump_rate  if pump_rate  > 0 else None,
+                    "use_type":          use_type   or None,
+                    "level_trend":       level_trend or None,
+                }.items() if v is not None}
+                prev_coeffs = calibrate_from_profile(preview_profile)
+                prev_label, prev_color = confidence_label(prev_coeffs.confidence)
+
+                st.markdown(
+                    f"""<div style="background:#0c1624; border:1px solid rgba(255,255,255,0.06);
+                        border-radius:10px; padding:14px 20px; margin:16px 0;">
+                        <div style="font-size:0.68rem; color:#4a5568; text-transform:uppercase;
+                                    letter-spacing:0.1em; margin-bottom:8px;">
+                            Model confidence with current answers
+                        </div>
+                        <div style="background:rgba(255,255,255,0.05); border-radius:100px;
+                                    height:8px; width:100%; overflow:hidden; margin-bottom:8px;">
+                            <div style="height:100%; width:{prev_coeffs.confidence}%;
+                                        background:linear-gradient(90deg,{prev_color},{prev_color}88);
+                                        border-radius:100px;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="color:{prev_color}; font-weight:700; font-size:0.9rem;">
+                                {prev_coeffs.confidence}% — {prev_label}
+                            </span>
+                            <span style="font-size:0.75rem; color:#4a5568;">
+                                Aquifer: {prev_coeffs.aquifer_type}
+                            </span>
+                        </div>
+                    </div>""",
+                    unsafe_allow_html=True
+                )
+
+                save_profile_btn = st.form_submit_button("💾 Save Well Profile", use_container_width=True)
+
+            if save_profile_btn:
+                new_profile = {
+                    "artesian_pressure": artesian == "yes",
+                    "rain_response":     rain_response or None,
+                    "well_depth_ft":     well_depth if well_depth > 0 else None,
+                    "pump_rate_gpm":     pump_rate  if pump_rate  > 0 else None,
+                    "use_type":          use_type   or None,
+                    "level_trend":       level_trend or None,
+                }
+                err = save_well_profile(w["id"], user.user_id, new_profile)
+                if err:
+                    st.error(f"Could not save profile: {err}")
+                else:
+                    saved_coeffs = calibrate_from_profile(new_profile)
+                    lbl, _ = confidence_label(saved_coeffs.confidence)
+                    st.success(
+                        f"✅ Profile saved — Model confidence: **{saved_coeffs.confidence}%** ({lbl})"
+                    )
+                    for note in saved_coeffs.notes:
+                        st.caption(f"📎 {note}")
+                    st.rerun()
+
+        # Manage / delete
+        with st.expander(f"⚙ Manage — {w['well_name']}", expanded=False):
             readings = get_well_readings(w["id"], user.user_id)
-            st.markdown(
-                f"<div style='color:#94a3b8; font-size:0.85rem;'>{len(readings)} reading(s)</div>",
-                unsafe_allow_html=True
-            )
-        with c3:
-            if st.button("Delete", key=f"del_{w['id']}"):
+            st.caption(f"{len(readings)} reading(s) stored for this well.")
+            if st.button(f"🗑 Delete {w['well_name']}", key=f"del_{w['id']}", type="secondary"):
                 err = delete_well(w["id"], user.user_id)
                 if err: st.error(err)
                 else: st.rerun()
-        st.markdown("<div style='border-bottom:1px solid rgba(255,255,255,0.05); margin:10px 0;'></div>",
-                    unsafe_allow_html=True)
+
+        st.markdown(
+            "<div style='border-bottom:1px solid rgba(255,255,255,0.04); margin:16px 0;'></div>",
+            unsafe_allow_html=True
+        )
+
+
+
 
 
 # ─────────────────────────────────────────────
@@ -769,6 +969,25 @@ def render_dashboard(user, selected_scenario, threshold):
     # Store average for threshold auto-suggestion in sidebar
     st.session_state["last_well_avg_level"] = float(sum(historical) / len(historical))
 
+    # ── Model confidence badge ──
+    conf_lbl, conf_clr = confidence_label(coeffs.confidence)
+    st.markdown(
+        f"""<div style="display:inline-flex; align-items:center; gap:10px;
+            background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
+            border-radius:100px; padding:6px 16px; margin-bottom:12px; font-size:0.78rem;">
+            <div style="background:rgba(255,255,255,0.05); border-radius:100px;
+                        height:5px; width:80px; overflow:hidden;">
+                <div style="height:100%; width:{coeffs.confidence}%;
+                            background:{conf_clr}; border-radius:100px;"></div>
+            </div>
+            <span style="color:{conf_clr}; font-weight:600;">{coeffs.confidence}% model confidence</span>
+            <span style="color:#4a5568;">·</span>
+            <span style="color:#4a5568;">{coeffs.aquifer_type}</span>
+            {"<span style='color:#4a5568;'>· <a href='#' style='color:#3b82f6;font-size:0.75rem;'>Improve in My Wells →</a></span>" if coeffs.confidence < 75 else ""}
+        </div>""",
+        unsafe_allow_html=True
+    )
+
     # Anomaly warning banner
     if anomaly_report.has_anomalies:
         bc = "#ef4444" if anomaly_report.n_critical > 0 else "#f59e0b"
@@ -783,8 +1002,16 @@ def render_dashboard(user, selected_scenario, threshold):
             unsafe_allow_html=True
         )
 
-    rain_coeff = RAIN_COEFF.get(selected_well_name, 0.012)
-    pump_coeff = PUMP_COEFF.get(selected_well_name, 0.020)
+    # ── Per-well calibrated coefficients from profile ──
+    well_data  = well_options[selected_well_name]
+    coeffs     = get_well_coefficients(well_data)
+    rain_coeff = coeffs.rain_coeff
+    pump_coeff = coeffs.pump_coeff
+
+    # Override NOISE_SD with calibrated value for this well
+    import config as _cfg2
+    _original_noise = _cfg2.NOISE_SD.get(selected_well_name)
+    _cfg2.NOISE_SD[selected_well_name] = coeffs.noise_sd
 
     # ── Real weather data (Open-Meteo) ──
     # Try to get real precipitation; fall back to synthetic if unavailable
