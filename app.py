@@ -801,7 +801,7 @@ def render_dashboard(user, selected_scenario, threshold):
     hybrid_f = hybrid_model(last_value, slope, FORECAST_HORIZON_MONTHS,
                             rain, pump, et, rain_coeff, pump_coeff)
     smooth_f = smoothed_model(last_value, slope, FORECAST_HORIZON_MONTHS)
-    ensemble = weighted_ensemble(hybrid_f, trend_f, smooth_f)
+    ensemble = weighted_ensemble(hybrid_f, trend_f, smooth_f, scenario=selected_scenario)
 
     # Monte Carlo
     cleanup = patch_noise_sd(selected_well_name)
@@ -896,7 +896,7 @@ def render_dashboard(user, selected_scenario, threshold):
             tf = trend_model(lv, sl, FORECAST_HORIZON_MONTHS)
             hf = hybrid_model(lv, sl, FORECAST_HORIZON_MONTHS, rp, pp2, ee, rc, pc)
             sf = smoothed_model(lv, sl, FORECAST_HORIZON_MONTHS)
-            ef = weighted_ensemble(hf, tf, sf)
+            ef = weighted_ensemble(hf, tf, sf, scenario="baseline")
             cl = patch_noise_sd(wn)
             _, pb, p5w, p95w = run_monte_carlo(ef, wn, threshold=threshold)
             cl()
@@ -1037,7 +1037,7 @@ def render_dashboard(user, selected_scenario, threshold):
             hf2 = hybrid_model(last_value, slope, FORECAST_HORIZON_MONTHS,
                                rr, pp2, ee, rain_coeff, pump_coeff)
             sf2 = smoothed_model(last_value, slope, FORECAST_HORIZON_MONTHS)
-            ef2 = weighted_ensemble(hf2, tf2, sf2)
+            ef2 = weighted_ensemble(hf2, tf2, sf2, scenario=sk)
             cl2 = patch_noise_sd(selected_well_name)
             _, pb2, _, _ = run_monte_carlo(ef2, selected_well_name, threshold=threshold)
             cl2()
