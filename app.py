@@ -341,7 +341,7 @@ def render_sidebar(user):
             help="Set the groundwater level (m) below which operations are at risk. "
                  "Tip: set this 15–25% below your current average level to see realistic forward-looking risk."
         )
-            st.markdown("---")
+        st.markdown("---")
 
         if st.button("Sign Out"):
             logout_user()
