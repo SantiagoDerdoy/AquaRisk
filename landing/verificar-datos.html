@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AquaRisk · Data Verification — Well 21S23E21C003M</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink:    #05090f;
+            --deep:   #080e18;
+            --panel:  #0c1624;
+            --card:   #0f1d2e;
+            --border: rgba(255,255,255,0.06);
+            --muted:  #4a5568;
+            --soft:   #718096;
+            --body:   #a0aec0;
+            --bright: #e2e8f0;
+            --white:  #f7fafc;
+            --blue:   #2563eb;
+            --blue-lt:#60a5fa;
+            --teal:   #0d9488;
+            --green:  #10b981;
+            --amber:  #f59e0b;
+            --red:    #ef4444;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Syne', sans-serif;
+            background: var(--ink);
+            color: var(--body);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* NAV */
+        nav {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 48px; height: 64px;
+            background: rgba(5,9,15,0.95); backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .nav-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; font-weight: 600; color: var(--white); text-decoration: none; }
+        .nav-logo span { color: var(--blue-lt); }
+        .nav-back { font-size: 0.78rem; color: var(--soft); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
+        .nav-back:hover { color: var(--bright); }
+
+        /* HERO */
+        .hero {
+            padding: 56px 48px 40px;
+            border-bottom: 1px solid var(--border);
+            background: var(--deep);
+        }
+        .hero-inner { max-width: 860px; margin: 0 auto; }
+        .eyebrow {
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.18em;
+            text-transform: uppercase; color: var(--teal);
+            display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
+        }
+        .eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--teal); }
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(1.8rem, 3vw, 2.6rem);
+            font-weight: 600; color: var(--white);
+            line-height: 1.1; letter-spacing: -0.02em;
+            margin-bottom: 16px;
+        }
+        .hero-sub { font-size: 0.92rem; color: var(--soft); max-width: 640px; line-height: 1.75; }
+
+        /* WELL INFO CARD */
+        .well-info {
+            max-width: 860px; margin: 40px auto 0;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+            background: var(--border); border-radius: 12px; overflow: hidden;
+        }
+        .well-info-item { background: var(--card); padding: 20px 24px; }
+        .wii-label { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+        .wii-value { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--bright); font-weight: 600; }
+        .wii-sub { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+        /* MAIN */
+        .main { max-width: 860px; margin: 0 auto; padding: 48px; }
+
+        /* SOURCE BANNER */
+        .source-banner {
+            background: rgba(13,148,136,0.06);
+            border: 1px solid rgba(13,148,136,0.2);
+            border-radius: 12px;
+            padding: 18px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 16px; margin-bottom: 36px; flex-wrap: wrap;
+        }
+        .source-text { font-size: 0.82rem; color: var(--soft); }
+        .source-text strong { color: var(--bright); }
+        .source-link {
+            display: inline-flex; align-items: center; gap: 7px;
+            background: rgba(13,148,136,0.1); border: 1px solid rgba(13,148,136,0.3);
+            color: #2dd4bf; padding: 9px 18px; border-radius: 8px;
+            font-size: 0.78rem; font-weight: 700; text-decoration: none;
+            transition: all 0.2s; white-space: nowrap; letter-spacing: 0.04em;
+        }
+        .source-link:hover { background: rgba(13,148,136,0.2); border-color: rgba(13,148,136,0.5); }
+
+        /* SECTION TITLE */
+        .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .section-title-sm { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+        .record-count { font-size: 0.72rem; color: var(--muted); }
+        .record-count span { color: var(--bright); font-weight: 700; }
+
+        /* TABLE */
+        .table-wrap {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 14px; overflow: hidden; margin-bottom: 40px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead tr { background: var(--deep); border-bottom: 1px solid var(--border); }
+        th {
+            padding: 12px 20px; text-align: left;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em;
+            text-transform: uppercase; color: var(--muted);
+        }
+        th.right { text-align: right; }
+        tbody tr { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        td { padding: 13px 20px; font-size: 0.84rem; color: var(--body); }
+        td.date { color: var(--bright); font-weight: 600; font-family: 'Cormorant Garamond', serif; font-size: 1rem; }
+        td.depth { text-align: right; font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 600; }
+        td.depth.good    { color: var(--green); }
+        td.depth.shallow { color: var(--blue-lt); }
+        td.depth.deep    { color: var(--amber); }
+        td.depth.vdeep   { color: var(--red); }
+        td.quality { text-align: right; }
+        td.org { color: var(--muted); font-size: 0.78rem; }
+
+        .quality-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 100px;
+            font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+        }
+        .quality-badge.good { background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2); }
+        .quality-badge.questionable { background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+        .quality-badge.missing { background: rgba(100,116,139,0.1); color: #64748b; border: 1px solid rgba(100,116,139,0.2); }
+
+        /* TRAINING / VALIDATION ROW HIGHLIGHTS */
+        tbody tr.row-train { background: rgba(96,165,250,0.04); }
+        tbody tr.row-train:hover { background: rgba(96,165,250,0.07); }
+        tbody tr.row-actual { background: rgba(16,185,129,0.06); }
+        tbody tr.row-actual:hover { background: rgba(16,185,129,0.1); }
+
+        .row-tag {
+            display: inline-block; font-size: 0.6rem; font-weight: 700;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            padding: 2px 7px; border-radius: 4px; margin-left: 8px; vertical-align: middle;
+        }
+        .row-tag.train  { background: rgba(96,165,250,0.15);  color: #60a5fa; }
+        .row-tag.actual { background: rgba(16,185,129,0.15);  color: #10b981; }
+
+        /* DEPTH BAR */
+        .depth-bar-wrap { display: flex; align-items: center; gap: 10px; }
+        .depth-bar-bg { flex: 1; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; min-width: 60px; }
+        .depth-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+        /* LOADING / ERROR */
+        .state-box {
+            padding: 56px 24px; text-align: center;
+        }
+        .state-box .icon { font-size: 2rem; margin-bottom: 12px; }
+        .state-box p { font-size: 0.9rem; color: var(--soft); }
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid rgba(255,255,255,0.06);
+            border-top-color: var(--blue-lt);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* VALIDATION CALLOUT */
+        .validation-callout {
+            background: rgba(16,185,129,0.06);
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: 12px; padding: 20px 24px;
+            margin-bottom: 36px;
+            display: flex; gap: 16px; align-items: flex-start;
+        }
+        .vc-icon {
+            width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+            background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3);
+            display: flex; align-items: center; justify-content: center;
+            color: #10b981; font-size: 1rem; margin-top: 2px;
+        }
+        .vc-title { font-size: 0.85rem; font-weight: 700; color: var(--bright); margin-bottom: 4px; }
+        .vc-desc { font-size: 0.8rem; color: var(--soft); line-height: 1.6; }
+        .vc-desc strong { color: #10b981; }
+
+        /* FOOTER */
+        .page-footer {
+            border-top: 1px solid var(--border); padding: 28px 48px;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 12px;
+        }
+        .page-footer p { font-size: 0.75rem; color: var(--muted); }
+        .page-footer a { color: var(--blue-lt); text-decoration: none; }
+
+        @media (max-width: 700px) {
+            nav { padding: 0 20px; }
+            .hero { padding: 40px 20px 32px; }
+            .well-info { grid-template-columns: 1fr 1fr; }
+            .main { padding: 32px 20px; }
+            .page-footer { padding: 24px 20px; flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <a class="nav-logo" href="index.html">Aqua<span>Risk</span></a>
+    <a class="nav-back" href="index.html#validation">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Validation
+    </a>
+</nav>
+
+<div class="hero">
+    <div class="hero-inner">
+        <div class="eyebrow">Public Data Verification</div>
+        <h1>Raw CASGEM Measurements<br>This Well, Unmodified.</h1>
+        <p class="hero-sub">
+            Every data point on the AquaRisk validation chart comes directly from this table.
+            The data is loaded live from the California DWR public database — nothing is hidden, interpolated, or adjusted.
+        </p>
+    </div>
+    <div class="well-info">
+        <div class="well-info-item">
+            <div class="wii-label">State Well Number</div>
+            <div class="wii-value">21S23E21C003M</div>
+            <div class="wii-sub">DWR identifier</div>
+        </div>
+        <div class="well-info-item">
+            <div class="wii-label">Basin</div>
+            <div class="wii-value">Kaweah</div>
+            <div class="wii-sub">Subbasin 5-022.11 · Tulare County, CA</div>
+        </div>
+        <div class="well-info-item">
+            <div class="wii-label">Coordinates</div>
+            <div class="wii-value">36.0942°N</div>
+            <div class="wii-sub">119.4921°W</div>
+        </div>
+        <div class="well-info-item">
+            <div class="wii-label">Program</div>
+            <div class="wii-value">VOLUNTARY</div>
+            <div class="wii-sub">DWR monitoring · semi-annual</div>
+        </div>
+    </div>
+</div>
+
+<div class="main">
+
+    <div class="source-banner">
+        <div class="source-text">
+            Data source: <strong>California DWR — Periodic Groundwater Level Measurements</strong><br>
+            Loaded live via CNRA Open Data API · resource <code style="color:#64748b;font-size:0.75rem;">bfa9f262-24a1-45bd-8dc8-138bc8107266</code>
+        </div>
+        <a class="source-link" href="https://data.cnra.ca.gov/dataset/periodic-groundwater-level-measurements" target="_blank">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+            Open CNRA Dataset ↗
+        </a>
+    </div>
+
+    <div class="validation-callout">
+        <div class="vc-icon">✓</div>
+        <div>
+            <div class="vc-title">How we used this data in the validation</div>
+            <div class="vc-desc">
+                AquaRisk was trained exclusively on <strong>Good-quality readings from 1996 to October 2006</strong>
+                (rows highlighted in blue below). The model then generated a blind 5-year forecast.
+                The <strong>January 2010 and February 2011 readings</strong> (highlighted in green) were
+                never seen by the model — they are the actual measurements we compared against the forecast.
+            </div>
+        </div>
+    </div>
+
+    <div class="section-head">
+        <div class="section-title-sm">All Measurements — site_code 360942N1194921W001</div>
+        <div class="record-count" id="recordCount">Loading...</div>
+    </div>
+
+    <div class="table-wrap" id="tableWrap">
+        <div class="state-box">
+            <div class="spinner"></div>
+            <p>Loading measurements from CNRA Open Data API…</p>
+        </div>
+    </div>
+
+</div>
+
+<div class="page-footer">
+    <p>Data © California Department of Water Resources · Public Domain · <a href="https://data.cnra.ca.gov/dataset/periodic-groundwater-level-measurements" target="_blank">CNRA Open Data</a></p>
+    <p>AquaRisk Analytics · <a href="index.html">aquariskanalytics.com</a></p>
+</div>
+
+<script>
+// Validation rows — the ones used in the AquaRisk chart
+const TRAIN_IDS = new Set([
+    '1996-01', '1996-10',
+    '1997-01', '1997-10',
+    '1998-01', '1998-10',
+    '1999-01', '1999-10',
+    '2000-01',
+    '2003-09',
+    '2006-01', '2006-10',
+]);
+const ACTUAL_DATES = new Set(['2010-01-21', '2011-02-24']);
+
+function rowKey(dateStr) {
+    // Returns YYYY-MM for matching
+    return dateStr.substring(0, 7).replace('-', '-').substring(0, 7);
+}
+function shortDate(dateStr) {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+function depthClass(depth) {
+    if (depth === null) return '';
+    if (depth < 60)  return 'shallow';
+    if (depth < 100) return 'good';
+    if (depth < 140) return 'deep';
+    return 'vdeep';
+}
+function depthBarColor(depth) {
+    if (depth < 60)  return '#60a5fa';
+    if (depth < 100) return '#10b981';
+    if (depth < 140) return '#f59e0b';
+    return '#ef4444';
+}
+
+async function loadData() {
+    const wrap = document.getElementById('tableWrap');
+    const countEl = document.getElementById('recordCount');
+
+    try {
+        // Load all records for this well (82 total per API)
+        const url = 'https://data.cnra.ca.gov/api/3/action/datastore_search?resource_id=bfa9f262-24a1-45bd-8dc8-138bc8107266&q=360942N1194921W001&limit=100';
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('API response ' + res.status);
+        const json = await res.json();
+
+        if (!json.success) throw new Error('API returned success=false');
+
+        // Sort by date ascending
+        const records = json.result.records
+            .sort((a, b) => new Date(a.msmt_date) - new Date(b.msmt_date));
+
+        // Max depth for bar scaling
+        const maxDepth = Math.max(...records.filter(r => r.gse_gwe).map(r => r.gse_gwe));
+
+        countEl.innerHTML = `<span>${records.length}</span> total measurements · ${records.filter(r=>r.gse_gwe).length} with valid depth readings`;
+
+        // Build table
+        const goodCount = records.filter(r => r.wlm_qa_desc === 'Good' && r.gse_gwe).length;
+        let html = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Depth to Water</th>
+                    <th>GW Elevation (ft NAVD88)</th>
+                    <th>Quality</th>
+                    <th>Collected By</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+
+        records.forEach(r => {
+            const dateKey = r.msmt_date.substring(0, 10); // YYYY-MM-DD
+            const yearMon = r.msmt_date.substring(0, 7);  // YYYY-MM
+            const isActual = ACTUAL_DATES.has(dateKey);
+            const isTrain  = !isActual && r.wlm_qa_desc === 'Good' && r.gse_gwe && (() => {
+                // Match training rows by YYYY-MM
+                const ym = yearMon;
+                return TRAIN_IDS.has(ym.replace('-0', '-').replace(/-(\d)$/, '-0$1').slice(0,7)) ||
+                       TRAIN_IDS.has(ym);
+            })();
+
+            const rowClass = isActual ? 'row-actual' : (isTrain ? 'row-train' : '');
+
+            const depthVal = r.gse_gwe !== null ? r.gse_gwe.toFixed(1) + ' ft' : '—';
+            const gweVal   = r.gwe    !== null ? r.gwe.toFixed(2) + ' ft'    : '—';
+            const dClass   = r.gse_gwe ? depthClass(r.gse_gwe) : '';
+            const barW     = r.gse_gwe ? Math.round((r.gse_gwe / maxDepth) * 100) : 0;
+            const barColor = r.gse_gwe ? depthBarColor(r.gse_gwe) : '#374151';
+
+            let qualBadge = '';
+            if (r.wlm_qa_desc === 'Good')         qualBadge = '<span class="quality-badge good">● Good</span>';
+            else if (r.wlm_qa_desc === 'Questionable') qualBadge = '<span class="quality-badge questionable">⚠ Questionable</span>';
+            else                                   qualBadge = `<span class="quality-badge missing">— ${r.wlm_qa_detail || 'Missing'}</span>`;
+
+            let dateTag = '';
+            if (isActual) dateTag = '<span class="row-tag actual">Validation</span>';
+            else if (isTrain) dateTag = '<span class="row-tag train">Training</span>';
+
+            html += `
+            <tr class="${rowClass}">
+                <td class="date">${shortDate(r.msmt_date)}${dateTag}</td>
+                <td class="depth ${dClass}">
+                    <div class="depth-bar-wrap">
+                        <span>${depthVal}</span>
+                        <div class="depth-bar-bg" style="max-width:80px;">
+                            <div class="depth-bar-fill" style="width:${barW}%;background:${barColor};"></div>
+                        </div>
+                    </div>
+                </td>
+                <td style="color:var(--soft);font-size:0.84rem;">${gweVal}</td>
+                <td class="quality">${qualBadge}</td>
+                <td class="org">${r.coop_org_name || '—'}</td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        wrap.innerHTML = html;
+
+    } catch (err) {
+        wrap.innerHTML = `
+        <div class="state-box">
+            <div class="icon">⚠</div>
+            <p style="margin-bottom:12px;">Could not load data from CNRA API.</p>
+            <p style="font-size:0.8rem;color:var(--muted);">You can access the data directly at:<br>
+            <a href="https://data.cnra.ca.gov/dataset/periodic-groundwater-level-measurements"
+               target="_blank" style="color:var(--blue-lt);">data.cnra.ca.gov ↗</a></p>
+            <p style="font-size:0.75rem;color:#374151;margin-top:12px;">Error: ${err.message}</p>
+        </div>`;
+        countEl.textContent = 'Could not load';
+    }
+}
+
+loadData();
+</script>
+</body>
+</html>

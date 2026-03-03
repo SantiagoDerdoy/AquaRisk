@@ -507,9 +507,9 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 52p
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Download Full Validation Report (PDF)
             </a>
-            <a href="https://data.cnra.ca.gov/dataset/periodic-groundwater-level-measurements" class="download-btn" target="_blank" style="margin-left:10px;background:rgba(13,148,136,0.08);border-color:rgba(13,148,136,0.3);color:#2dd4bf;">
+            <a href="verificar-datos.html" class="download-btn" style="margin-left:10px;background:rgba(13,148,136,0.08);border-color:rgba(13,148,136,0.3);color:#2dd4bf;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-                Verify Source Data (CASGEM)
+                Verify Raw Data ↗
             </a>
         </div>
 
@@ -748,7 +748,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 52p
 <footer>
     <div class="footer-logo">AquaRisk</div>
     <div class="footer-text">© 2025 AquaRisk Analytics. All rights reserved.</div>
-    <div class="footer-contact"><a href="mailto:info@aquariskanalytics.com">info@aquariskanalytics.com</a></div>
+    <div class="footer-contact"><a href="/cdn-cgi/l/email-protection#b8d1d6ded7f8d9c9cdd9cad1cbd3d9d6d9d4c1ccd1dbcb96dbd7d5"><span class="__cf_email__" data-cfemail="365f5850597657474357445f455d5758575a4f425f55451855595b">[email&#160;protected]</span></a></div>
 </footer>
 
 <!-- AUTH MODAL -->
@@ -811,7 +811,7 @@ footer{background:var(--ink);border-top:1px solid var(--border);padding:40px 52p
     </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── CUSTOM DROPDOWNS ──
 let _ddState = { ddWell: 'GW-01', ddScenario: 'baseline' };
 
@@ -962,12 +962,4 @@ function handleRegister() {
     if (!name)              { showMsg('registerMsg', 'Full name is required.', 'error'); return; }
     if (!company)           { showMsg('registerMsg', 'Company name is required.', 'error'); return; }
     if (!email || !email.includes('@')) { showMsg('registerMsg', 'Valid email address required.', 'error'); return; }
-    if (pass.length < 6)    { showMsg('registerMsg', 'Password must be at least 6 characters.', 'error'); return; }
-    showMsg('registerMsg', 'Account created! Redirecting to platform...', 'success');
-    setTimeout(() => {
-        window.location.href = `${APP_URL}?plan=${plan}&email=${encodeURIComponent(email)}`;
-    }, 900);
-}
-</script>
-</body>
-</html>
+    if (pass.length < 6)    { showMsg('registerMsg', 'Password must be at least 6 characters.', 'error
