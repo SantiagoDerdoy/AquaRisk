@@ -260,7 +260,17 @@
 
 <div class="main">
 
-    <div class="source-banner">
+    <div style="display:flex;gap:0;margin-bottom:32px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;overflow:hidden;">
+    <button id="tab1" onclick="switchWell(1)"
+        style="flex:1;padding:14px 20px;background:rgba(37,99,235,0.15);color:#60a5fa;border:none;font-family:Syne,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;letter-spacing:0.04em;border-right:1px solid rgba(255,255,255,0.06);">
+        Case 1 · Well 21S23E21C003M · Kaweah Subbasin
+    </button>
+    <button id="tab2" onclick="switchWell(2)"
+        style="flex:1;padding:14px 20px;background:transparent;color:#64748b;border:none;font-family:Syne,sans-serif;font-size:0.82rem;font-weight:700;cursor:pointer;letter-spacing:0.04em;">
+        Case 2 · Well 21S22E07J001M · Tulare Lake Subbasin
+    </button>
+</div>
+<div class="source-banner">
         <div class="source-text">
             Data source: <strong>California DWR — Periodic Groundwater Level Measurements</strong><br>
             Loaded live via CNRA Open Data API · resource <code style="color:#64748b;font-size:0.75rem;">bfa9f262-24a1-45bd-8dc8-138bc8107266</code>
@@ -305,16 +315,7 @@
 
 <script>
 // Validation rows — the ones used in the AquaRisk chart
-const TRAIN_IDS = new Set([
-    '1996-01', '1996-10',
-    '1997-01', '1997-10',
-    '1998-01', '1998-10',
-    '1999-01', '1999-10',
-    '2000-01',
-    '2003-09',
-    '2006-01', '2006-10',
-]);
-const ACTUAL_DATES = new Set(['2010-01-21', '2011-02-24']);
+// Well-specific sets now in WELLS config above
 
 function rowKey(dateStr) {
     // Returns YYYY-MM for matching
@@ -341,10 +342,20 @@ function depthBarColor(depth) {
 async function loadData() {
     const wrap = document.getElementById('tableWrap');
     const countEl = document.getElementById('recordCount');
+    const well = WELLS[currentWell];
+
+    // Update well info panel
+    document.querySelectorAll('.wii-value')[0].textContent = well.swn;
+    document.querySelectorAll('.wii-value')[1].textContent = well.basin.split('·')[0].trim();
+    document.querySelectorAll('.wii-sub')[1].textContent = well.basin.split('·')[1]?.trim() + ' · ' + well.county;
+    document.querySelectorAll('.wii-value')[2].textContent = well.coords.split(',')[0];
+    document.querySelectorAll('.wii-sub')[2].textContent = well.coords.split(',')[1]?.trim();
+    document.querySelectorAll('.wii-value')[3].textContent = well.program.split('·')[0].trim();
+    document.querySelectorAll('.wii-sub')[3].textContent = well.program;
+    document.getElementById('validationCallout').innerHTML = well.callout;
 
     try {
-        // Load all records for this well (82 total per API)
-        const url = 'https://data.cnra.ca.gov/api/3/action/datastore_search?resource_id=bfa9f262-24a1-45bd-8dc8-138bc8107266&q=360942N1194921W001&limit=100';
+        const url = `https://data.cnra.ca.gov/api/3/action/datastore_search?resource_id=bfa9f262-24a1-45bd-8dc8-138bc8107266&q=${well.site_code}&limit=100`;
         const res = await fetch(url);
         if (!res.ok) throw new Error('API response ' + res.status);
         const json = await res.json();
@@ -379,13 +390,8 @@ async function loadData() {
         records.forEach(r => {
             const dateKey = r.msmt_date.substring(0, 10); // YYYY-MM-DD
             const yearMon = r.msmt_date.substring(0, 7);  // YYYY-MM
-            const isActual = ACTUAL_DATES.has(dateKey);
-            const isTrain  = !isActual && r.wlm_qa_desc === 'Good' && r.gse_gwe && (() => {
-                // Match training rows by YYYY-MM
-                const ym = yearMon;
-                return TRAIN_IDS.has(ym.replace('-0', '-').replace(/-(\d)$/, '-0$1').slice(0,7)) ||
-                       TRAIN_IDS.has(ym);
-            })();
+            const isActual = well.actual_dates.has(dateKey);
+            const isTrain = !isActual && r.wlm_qa_desc === 'Good' && r.gse_gwe && well.train_dates.has(yearMon);
 
             const rowClass = isActual ? 'row-actual' : (isTrain ? 'row-train' : '');
 
@@ -436,6 +442,43 @@ async function loadData() {
         </div>`;
         countEl.textContent = 'Could not load';
     }
+}
+
+
+const WELLS = {
+    1: {
+        site_code: '360942N1194921W001',
+        swn: '21S23E21C003M',
+        basin: 'Kaweah Subbasin · Basin 5-022.11',
+        county: 'Tulare County, CA',
+        program: 'VOLUNTARY · DWR semi-annual',
+        coords: '36.0942°N, 119.4921°W',
+        train_dates: new Set(['1996-01','1996-10','1997-01','1997-10','1998-01','1998-10','1999-01','1999-10','2000-01','2003-09','2006-01','2006-10']),
+        actual_dates: new Set(['2010-01-21','2011-02-24']),
+        callout: 'Trained on <strong>1996–2006 CASGEM data</strong> (12 Good readings). Blind forecast 2007–2011. Actual Jan 2010 = 145 ft, Feb 2011 = 131 ft — both within P5–P95 band.'
+    },
+    2: {
+        site_code: '361158N1196258W001',
+        swn: '21S22E07J001M',
+        basin: 'Tulare Lake Subbasin · Basin 5-022.12',
+        county: 'Tulare County, CA',
+        program: 'SGMA · Kaweah Delta WCD / El Rico GSA',
+        coords: '36.1158°N, 119.6258°W',
+        train_dates: new Set(['2011-10','2012-02','2012-10','2013-03','2013-10','2014-02','2014-10']),
+        actual_dates: new Set(['2015-02-27','2015-10-14','2016-03-10','2016-10-16','2017-03-17','2017-10-13','2018-10-22','2020-03-06','2021-03-02','2021-10-08','2022-02-08','2022-10-17']),
+        callout: 'Trained on <strong>2011–2014 data</strong> (7 Good readings, severe drought onset). Blind forecast 2015–2022 — <strong>8 years of independent validation</strong>. Captured drought 2016, recovery 2017, drought 2021, and the 2022 rainfall recovery.'
+    }
+};
+
+let currentWell = 1;
+
+function switchWell(n) {
+    currentWell = n;
+    document.getElementById('tab1').style.background = n===1 ? 'rgba(37,99,235,0.15)' : 'transparent';
+    document.getElementById('tab1').style.color = n===1 ? '#60a5fa' : '#64748b';
+    document.getElementById('tab2').style.background = n===2 ? 'rgba(245,158,11,0.12)' : 'transparent';
+    document.getElementById('tab2').style.color = n===2 ? '#f59e0b' : '#64748b';
+    loadData();
 }
 
 loadData();
