@@ -196,7 +196,7 @@ section{padding:110px 52px;position:relative;z-index:1;}
     section{padding:72px 24px;}
     .hero{padding:100px 24px 72px;}
     .metrics-grid,.pricing-grid{grid-template-columns:1fr;}
-    .price-card.featured{transform:none;}
+    .price-card.featured{transform:none;box-shadow:none;}
     .cap-grid{grid-template-columns:1fr;}
     .cap-item:nth-child(2n){border-right:none;}
     .demo-body{grid-template-columns:1fr;}
@@ -209,17 +209,17 @@ section{padding:110px 52px;position:relative;z-index:1;}
 }
 
 /* ── PRICING CARDS ─────────────────────────────────────────── */
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;align-items:start;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;align-items:stretch;}
 .price-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 32px;position:relative;transition:border-color 0.25s,transform 0.25s;}
 .price-card:hover{border-color:rgba(96,165,250,0.25);transform:translateY(-4px);}
-.price-card.featured{border-color:rgba(37,99,235,0.4);background:linear-gradient(160deg,#0d1e38,#0b1828);transform:scale(1.03);box-shadow:0 0 60px rgba(37,99,235,0.12);}
-.price-card.featured:hover{transform:scale(1.03) translateY(-4px);}
+.price-card.featured{border-color:rgba(37,99,235,0.4);background:linear-gradient(160deg,#0d1e38,#0b1828);box-shadow:0 0 60px rgba(37,99,235,0.12);}
+.price-card.featured:hover{transform:translateY(-4px);}
 .plan-badge{display:inline-block;background:linear-gradient(135deg,var(--blue),#0ea5e9);color:#fff;font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:4px 14px;border-radius:50px;margin-bottom:20px;}
 .plan-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;color:var(--white);margin-bottom:12px;}
 .plan-price{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:600;color:var(--white);letter-spacing:-1px;line-height:1;margin-bottom:6px;}
 .plan-price .period{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:400;color:var(--soft);letter-spacing:0;}
 .plan-price .custom{font-size:2rem;}
-.plan-min{font-size:0.72rem;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;display:inline-block;padding:4px 10px;margin-bottom:28px;}
+.plan-min{font-size:0.72rem;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:6px;display:inline-block;padding:4px 10px;margin-top:14px;margin-bottom:28px;}
 .plan-features{list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:32px;}
 .plan-features li{display:flex;align-items:flex-start;gap:10px;font-size:0.875rem;color:var(--soft);line-height:1.45;}
 .check{width:18px;height:18px;background:rgba(16,185,129,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
@@ -990,4 +990,10 @@ function handleRegister() {
     if (!name)              { showMsg('registerMsg', 'Full name is required.', 'error'); return; }
     if (!company)           { showMsg('registerMsg', 'Company name is required.', 'error'); return; }
     if (!email || !email.includes('@')) { showMsg('registerMsg', 'Valid email address required.', 'error'); return; }
-    if (pass.length < 6)    { showMsg('registerMsg', 'Password must be at least 6 characters.', 'error
+    if (pass.length < 6)    { showMsg('registerMsg', 'Password must be at least 6 characters.', 'error'); return; }
+    showMsg('registerMsg', 'Creating your account...', 'success');
+    setTimeout(() => { window.location.href = APP_URL; }, 900);
+}
+</script>
+</body>
+</html>
