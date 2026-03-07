@@ -53,6 +53,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:1000;display:flex;justify-conten
 .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:0.7rem;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--blue-lt);border:1px solid rgba(96,165,250,0.25);padding:7px 18px;border-radius:100px;margin-bottom:32px;animation:fadeUp 0.7s ease both;}
 .hero-eyebrow::before{content:'';width:6px;height:6px;background:var(--blue-lt);border-radius:50%;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
 .hero h1{font-family:'Cormorant Garamond',serif;font-size:clamp(3rem,6vw,5rem);font-weight:600;line-height:1.06;color:var(--white);letter-spacing:-0.02em;margin-bottom:28px;animation:fadeUp 0.7s 0.1s ease both;}
 .hero h1 em{font-style:italic;color:var(--blue-lt);}
 .hero-sub{font-size:1.05rem;color:var(--soft);max-width:580px;margin:0 auto 48px;font-weight:400;line-height:1.75;animation:fadeUp 0.7s 0.2s ease both;}
@@ -209,12 +210,12 @@ section{padding:110px 52px;position:relative;z-index:1;}
 }
 
 /* ── PRICING CARDS ─────────────────────────────────────────── */
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;align-items:stretch;}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:60px;align-items:end;padding-top:20px;}
 .price-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 32px;position:relative;transition:border-color 0.25s,transform 0.25s;}
 .price-card:hover{border-color:rgba(96,165,250,0.25);transform:translateY(-4px);}
-.price-card.featured{border-color:rgba(37,99,235,0.4);background:linear-gradient(160deg,#0d1e38,#0b1828);box-shadow:0 0 60px rgba(37,99,235,0.12);}
+.price-card.featured{border-color:rgba(37,99,235,0.4);background:linear-gradient(160deg,#0d1e38,#0b1828);box-shadow:0 0 60px rgba(37,99,235,0.12);margin-top:16px;}
 .price-card.featured:hover{transform:translateY(-4px);}
-.plan-badge{display:inline-block;background:linear-gradient(135deg,var(--blue),#0ea5e9);color:#fff;font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:4px 14px;border-radius:50px;margin-bottom:20px;}
+.plan-badge{position:absolute;top:-16px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--blue),#0ea5e9);color:#fff;font-size:0.68rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:5px 18px;border-radius:50px;white-space:nowrap;box-shadow:0 4px 16px rgba(37,99,235,0.4);}
 .plan-name{font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:600;color:var(--white);margin-bottom:12px;}
 .plan-price{font-family:'Cormorant Garamond',serif;font-size:3rem;font-weight:600;color:var(--white);letter-spacing:-1px;line-height:1;margin-bottom:6px;}
 .plan-price .period{font-family:'Syne',sans-serif;font-size:0.85rem;font-weight:400;color:var(--soft);letter-spacing:0;}
